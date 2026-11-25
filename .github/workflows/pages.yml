@@ -1,0 +1,124 @@
+name: Deploy Study Hub to GitHub Pages
+
+on:
+  push:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate study manifest.json
+        run: |
+          node -e '
+          const fs = require("fs");
+          const path = require("path");
+
+          const root = process.cwd();
+          const skipDirs = new Set(["node_modules", ".git", ".github"]);
+
+          function humanizeTitle(filename) {
+            const lower = filename.toLowerCase();
+            if (lower === "study.md") return "Study Guide";
+            if (lower === "quiz.md") return "Quiz Guide";
+            const base = filename.replace(/\.md$/i, "");
+            return base
+              .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+              .replace(/[-_]+/g, " ")
+              .replace(/\s+/g, " ")
+              .trim()
+              .replace(/\b\w/g, c => c.toUpperCase());
+          }
+
+          function rankFile(name) {
+            const lower = name.toLowerCase();
+            if (lower === "study.md") return 0;
+            if (lower === "quiz.md") return 1;
+            return 2;
+          }
+
+          function walkSubject(dir, subjectName, groupMap) {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            for (const entry of entries) {
+              if (entry.name.startsWith(".") || skipDirs.has(entry.name)) continue;
+              const full = path.join(dir, entry.name);
+              if (entry.isDirectory()) {
+                walkSubject(full, subjectName, groupMap);
+              } else if (/\.md$/i.test(entry.name)) {
+                const relFromRoot = path.relative(root, full).split(path.sep).join("/");
+                const relFromSubject = path.relative(path.join(root, subjectName), full).split(path.sep);
+                const groupName = relFromSubject.length > 1 ? relFromSubject.slice(0, -1).join(" / ") : "General";
+                if (!groupMap.has(groupName)) groupMap.set(groupName, []);
+                groupMap.get(groupName).push({
+                  title: humanizeTitle(entry.name),
+                  name: entry.name,
+                  path: relFromRoot,
+                  type: "md"
+                });
+              }
+            }
+          }
+
+          const topEntries = fs.readdirSync(root, { withFileTypes: true })
+            .filter(e => e.isDirectory() && !e.name.startsWith(".") && !skipDirs.has(e.name))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+          const subjects = [];
+          for (const dirEntry of topEntries) {
+            const groupMap = new Map();
+            walkSubject(path.join(root, dirEntry.name), dirEntry.name, groupMap);
+            if (groupMap.size === 0) continue;
+
+            const groups = Array.from(groupMap.entries())
+              .sort((a, b) => a[0].localeCompare(b[0]))
+              .map(([name, files]) => ({
+                name,
+                files: files.sort((a, b) => {
+                  const r = rankFile(a.name) - rankFile(b.name);
+                  return r !== 0 ? r : a.title.localeCompare(b.title);
+                })
+              }));
+
+            subjects.push({ name: dirEntry.name, groups });
+          }
+
+          const manifest = {
+            generatedAt: new Date().toISOString(),
+            subjects
+          };
+          fs.writeFileSync(path.join(root, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+          console.log("Generated manifest.json with", subjects.length, "subject(s).");
+          '
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-11-25T21:39:00+07:00",
+  "subjects": [
+    {
+      "name": "Software Architecture",
+      "groups": [
+        {
+          "name": "Midterm",
+          "files": [
+            {
+              "title": "Study Guide",
+              "name": "study.md",
+              "path": "Software Architecture/Midterm/study.md",
+              "type": "md"
+            },
+            {
+              "title": "Quiz Guide",
+              "name": "quiz.md",
+              "path": "Software Architecture/Midterm/quiz.md",
+              "type": "md"
+            },
+            {
+              "title": "Teachers Node",
+              "name": "TeachersNode.md",
+              "path": "Software Architecture/Midterm/TeachersNode.md",
+              "type": "md"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
