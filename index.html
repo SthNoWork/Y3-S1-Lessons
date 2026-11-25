@@ -193,6 +193,7 @@
       background: var(--accent-soft);
     }
 
+    .ctrl-btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .ctrl-btn.is-active {
       border-color: var(--cyan);
       color: var(--accent);
@@ -1038,6 +1039,85 @@
       .md-article { padding: 18px; }
     }
 
+    /* Audiobook Player */
+    .qa-play-btn {
+      float: right;
+      margin-left: 8px;
+      padding: 2px 9px;
+      font: 600 12px "IBM Plex Sans", sans-serif;
+      color: var(--cyan);
+      background: var(--accent-soft);
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .qa-play-btn:hover { border-color: var(--cyan); }
+    .md-article details.audio-active-card {
+      border-color: var(--cyan);
+      border-left-color: var(--cyan);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+    }
+    body.audio-open .md-scroll { padding-bottom: 230px; }
+    .audio-dock {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      z-index: 60;
+      max-width: 980px;
+      margin: 0 auto;
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 10px 14px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+    }
+    .audio-dock.open { display: flex; flex-direction: column; gap: 8px; }
+    .audio-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .audio-pos, .audio-line-pos { font-size: 12px; color: var(--muted); font-family: "IBM Plex Mono", monospace; }
+    .audio-badge {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+      padding: 2px 9px; border-radius: 999px; border: 1px solid var(--cyan); color: var(--cyan);
+    }
+    .audio-badge.is-answer { border-color: var(--emerald); color: var(--emerald); }
+    .audio-close { margin-left: auto; }
+    .audio-caption {
+      font-size: 15px; line-height: 1.45; color: var(--text);
+      max-height: 4.4em; overflow: auto;
+      background: var(--surface-raised); border-radius: 6px; padding: 8px 10px;
+    }
+    .audio-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .audio-nav-group, .audio-settings { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .audio-settings { margin-left: auto; }
+    .audio-nav-group .ctrl-btn { min-width: 64px; padding: 9px 12px; font-size: 14px; }
+    .audio-play-main { min-width: 96px !important; background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+    .audio-settings select { max-width: 170px; }
+    .audio-hints { font-size: 11.5px; color: var(--muted); }
+    .audio-section-title {
+      font-size: 12px; font-weight: 600; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 420px;
+    }
+    .audio-badge.is-section { border-color: var(--amber); color: var(--amber); }
+    .qa-tag-row { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 8px; vertical-align: middle; }
+    .qa-tag-pill {
+      font: 600 10.5px "IBM Plex Mono", monospace;
+      padding: 1px 7px; border-radius: 999px;
+      border: 1px solid var(--border-strong); color: var(--muted); background: var(--surface);
+    }
+    .qa-tag-pill.tag-radar { border-color: var(--coral); color: var(--coral); background: var(--coral-soft); }
+    .qa-tag-pill.tag-theory { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .qa-tag-pill.tag-practical { border-color: var(--emerald); color: var(--emerald); background: var(--emerald-soft); }
+    .qa-tag-pill.tag-review { border-color: var(--amber); color: var(--amber); background: var(--amber-soft); }
+    .ctrl-btn.is-offline-saved { border-color: var(--emerald); color: var(--emerald); background: var(--emerald-soft); }
+    .ctrl-btn.is-flagged { border-color: var(--amber); color: var(--amber); background: var(--amber-soft); }
+    .filter-btn.is-active[data-filter="review"] { border-color: var(--amber); color: var(--amber); background: var(--amber-soft); }
+
+    @media (max-width: 820px) {
+      .audio-settings { margin-left: 0; }
+      .audio-nav-group .ctrl-btn { flex: 1 1 28%; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -1053,7 +1133,7 @@
         overflow: visible !important;
         display: block !important;
       }
-      .topbar, .sidebar, .md-outline, .md-toolbar, .progress-track, .check-btn {
+      .topbar, .sidebar, .md-outline, .md-toolbar, .progress-track, .check-btn, .audio-dock, .qa-play-btn, #mdAudioBtn, #offlineBtn {
         display: none !important;
       }
       .md-article {
@@ -1089,6 +1169,8 @@
           <span class="timer-dot"></span>
           <span id="timerText">25:00</span>
         </button>
+        <button class="ctrl-btn" id="offlineBtn" type="button" title="Save all study guides for offline viewing and reload">Save Offline</button>
+        <button class="ctrl-btn" id="mdAudioBtn" type="button" disabled title="Open Q&A Audiobook Player">Audiobook</button>
         <button class="ctrl-btn topbar-secondary" id="focusBtn" type="button" title="Toggle Focus Mode (F)">Focus</button>
         <button class="ctrl-btn topbar-secondary" id="themeToggle" type="button" title="Switch light / dark mode">Dark</button>
         <a class="ctrl-btn topbar-secondary" id="openTabLink" href="#" target="_blank" rel="noopener" style="display:none;">Raw .md</a>
@@ -1149,6 +1231,45 @@
     </div>
   </div>
 
+  <div class="audio-dock" id="audioDock" role="region" aria-label="Audiobook Player">
+    <div class="audio-head">
+      <span class="audio-pos" id="audioPos">Q 0 / 0</span>
+      <span class="audio-badge" id="audioBadge">QUESTION</span>
+      <span class="audio-line-pos" id="audioLinePos">Part 1 / 1</span>
+      <span class="audio-section-title" id="audioSectionTitle"></span>
+      <button class="ctrl-btn audio-close" id="audioCloseBtn" type="button" title="Close (Esc)">✕</button>
+    </div>
+    <div class="audio-caption" id="audioLineText">Press Play</div>
+    <div class="audio-controls">
+      <div class="audio-nav-group">
+        <button class="ctrl-btn" id="audioPrevQ" type="button" title="Previous question (↑)">▲ Prev Q</button>
+        <button class="ctrl-btn" id="audioPrevLine" type="button" title="Back one bullet/block (←)">◀ Prev</button>
+        <button class="ctrl-btn audio-play-main" id="audioPlayBtn" type="button" title="Play / Pause (Space)">▶ Play</button>
+        <button class="ctrl-btn" id="audioNextLine" type="button" title="Forward one bullet/block (→)">Next ▶</button>
+        <button class="ctrl-btn" id="audioNextQ" type="button" title="Next question (↓)">▼ Next Q</button>
+        <button class="ctrl-btn" id="audioToggleSection" type="button" title="Jump Question ↔ Answer (Enter)">Q ↔ A</button>
+        <button class="ctrl-btn" id="audioPrevSec" type="button" title="Previous section (Shift+↑)">« Sec</button>
+        <button class="ctrl-btn" id="audioNextSec" type="button" title="Next section (Shift+↓)">Sec »</button>
+        <button class="ctrl-btn" id="audioReplayBtn" type="button" title="Replay current question/answer (R)">↺</button>
+        <button class="ctrl-btn" id="audioReviewBtn" type="button" title="Flag for review (M)">☆ Review</button>
+      </div>
+      <div class="audio-settings">
+        <button class="ctrl-btn" id="audioRecallBtn" type="button" title="Pause before the answer">Recall: 0s</button>
+        <select class="search-input" id="audioRateSelect" title="Speed">
+          <option value="0.8">0.8x</option>
+          <option value="0.9">0.9x</option>
+          <option value="1">1.0x</option>
+          <option value="1.15">1.15x</option>
+          <option value="1.3">1.3x</option>
+          <option value="1.5">1.5x</option>
+          <option value="1.75">1.75x</option>
+        </select>
+        <select class="search-input" id="audioVoiceSelect" title="Voice"></select>
+      </div>
+    </div>
+    <div class="audio-hints">↑/↓ Q · Shift+↑/↓ Section · ←/→ Bullet · Space Play/Pause · Enter Q↔A · R Replay · M Review · Esc Close</div>
+  </div>
+
   <script>
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
@@ -1181,6 +1302,7 @@
     const subjectGrid = document.getElementById('subjectGrid');
 
     let manifestData = { subjects: [] };
+    let openFileSeq = 0;
     let activeFile = null;
     let rawMarkdown = '';
 
@@ -1194,6 +1316,7 @@
     }
 
     async function renderMermaidInMd() {
+      if (typeof mermaid === 'undefined') return;
       if (typeof mermaid === 'undefined') return;
       const theme = getTheme() === 'dark' ? 'dark' : 'neutral';
       mermaid.initialize({ startOnLoad: false, theme, securityLevel: 'loose' });
@@ -1752,16 +1875,25 @@
       mdExpandBtn.style.display = hasDetails ? 'inline-flex' : 'none';
       mdCollapseBtn.style.display = hasDetails ? 'inline-flex' : 'none';
 
+      reviewSet = new Set();
+      activeFilter = 'all';
+      try { reviewSet = new Set(JSON.parse(lsGet('study-review:' + filePath, '[]'))); } catch (e) {}
+      mdContent.querySelectorAll('details').forEach(d => {
+        if (reviewSet.has(keyForDetails(d))) d.setAttribute('data-review', '1');
+      });
+
       /* Build tag filter buttons when <details data-tag="..."> exists */
       const taggedDetails = Array.from(mdContent.querySelectorAll('details[data-tag]'));
       const canonicalOrder = ['radar', 'theory', 'practical'];
-      const tagLabels = { radar: 'Exam Radar', theory: 'Theory · 60%', practical: 'Practical · 40%' };
-      const presentTags = canonicalOrder.filter(t =>
-        taggedDetails.some(d => (d.getAttribute('data-tag') || '').split(/\s+/).includes(t))
-      );
+      const allTags = new Set();
+      taggedDetails.forEach(d => (d.getAttribute('data-tag') || '').split(/\s+/).filter(Boolean).forEach(t => allTags.add(t)));
+      const presentTags = [
+        ...canonicalOrder.filter(t => allTags.has(t)),
+        ...Array.from(allTags).filter(t => !canonicalOrder.includes(t)).sort()
+      ];
 
       mdFilterBar.innerHTML = '';
-      if (presentTags.length > 0) {
+      if (presentTags.length > 0 || hasDetails) {
         const makeFilterBtn = (tag, label, active) => {
           const b = document.createElement('button');
           b.type = 'button';
@@ -1771,15 +1903,13 @@
           b.addEventListener('click', () => {
             mdFilterBar.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('is-active'));
             b.classList.add('is-active');
-            taggedDetails.forEach(d => {
-              const tags = (d.getAttribute('data-tag') || '').split(/\s+/);
-              d.classList.toggle('hidden-by-filter', tag !== 'all' && !tags.includes(tag));
-            });
+            applyFilter(tag);
           });
           return b;
         };
         mdFilterBar.appendChild(makeFilterBtn('all', 'All', true));
-        presentTags.forEach(t => mdFilterBar.appendChild(makeFilterBtn(t, tagLabels[t] || t, false)));
+        presentTags.forEach(t => mdFilterBar.appendChild(makeFilterBtn(t, formatTagLabel(t), false)));
+        mdFilterBar.appendChild(makeFilterBtn('review', 'Review (0)', false));
         mdFilterBar.style.display = 'flex';
       } else {
         mdFilterBar.style.display = 'none';
@@ -1787,6 +1917,9 @@
 
       mdToolbar.style.display = (sections.length > 0 || hasDetails || presentTags.length > 0) ? 'flex' : 'none';
       updateMasteryUI();
+      rebuildAudioDeck();
+      restoreAudioBookmark();
+      updateReviewFilterLabel();
     }
 
     mdExpandBtn.addEventListener('click', () => {
@@ -1832,6 +1965,776 @@
       });
     });
 
+    /* --- Audiobook Player --- */
+    const mdAudioBtn = document.getElementById('mdAudioBtn');
+    const audioDock = document.getElementById('audioDock');
+    const audioPos = document.getElementById('audioPos');
+    const audioBadge = document.getElementById('audioBadge');
+    const audioLinePos = document.getElementById('audioLinePos');
+    const audioLineText = document.getElementById('audioLineText');
+    const audioCloseBtn = document.getElementById('audioCloseBtn');
+    const audioPrevQ = document.getElementById('audioPrevQ');
+    const audioPrevLine = document.getElementById('audioPrevLine');
+    const audioPlayBtn = document.getElementById('audioPlayBtn');
+    const audioNextLine = document.getElementById('audioNextLine');
+    const audioNextQ = document.getElementById('audioNextQ');
+    const audioToggleSection = document.getElementById('audioToggleSection');
+    const audioRecallBtn = document.getElementById('audioRecallBtn');
+    const audioRateSelect = document.getElementById('audioRateSelect');
+    const audioVoiceSelect = document.getElementById('audioVoiceSelect');
+    const audioPrevSec = document.getElementById('audioPrevSec');
+    const audioNextSec = document.getElementById('audioNextSec');
+    const audioReplayBtn = document.getElementById('audioReplayBtn');
+    const audioReviewBtn = document.getElementById('audioReviewBtn');
+    const offlineBtn = document.getElementById('offlineBtn');
+
+    let audioDeck = [];
+    let audioOpen = false;
+    let isPlaying = false;
+    let cardIdx = 0;
+    let section = 'question';
+    let lineIdx = 0;
+    let playSessionId = 0;
+    let stepTimer = null;
+    let activeUtterance = null;
+    let lastSpokenCard = -1;
+    let lastAnnouncedSection = null;
+    let audioCtx = null;
+    const audioSectionTitle = document.getElementById('audioSectionTitle');
+    const hasTTS = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+
+    function lsGet(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+    function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    let audioRate = parseFloat(lsGet('study-audio-rate', '1')) || 1;
+    let recallPauseSec = lsGet('study-audio-recall', '0') === '3' ? 3 : 0;
+
+    function playChime(type) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const seqs = {
+          nextQ: [440, 587], prevQ: [587, 440], stepFwd: [660], stepBack: [392],
+          section: [523], play: [440, 523], pause: [523, 392], tick: [330], done: [523, 659, 784],
+          reviewOn: [587, 784], reviewOff: [440, 349]
+        };
+        const notes = seqs[type] || [440];
+        const t0 = audioCtx.currentTime;
+        notes.forEach((f, i) => {
+          const osc = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          osc.type = i % 2 ? 'triangle' : 'sine';
+          osc.frequency.value = f;
+          const s = t0 + i * 0.09;
+          g.gain.setValueAtTime(0.0001, s);
+          g.gain.exponentialRampToValueAtTime(0.07, s + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, s + 0.12);
+          osc.connect(g); g.connect(audioCtx.destination);
+          osc.start(s); osc.stop(s + 0.14);
+        });
+      } catch (e) {}
+    }
+
+    function normalizeForSpeech(text) {
+      return String(text)
+        .replace(/\[W(\d+)\s*[·.\-]\s*Q(\d+)([a-z]?)\]/gi, (m, w, q, s) => `Week ${w}, Question ${q}${s ? ' ' + s : ''}. `)
+        .replace(/->|→/g, ' to ')
+        .replace(/↔/g, ' and ')
+        .replace(/≈/g, ' approximately ')
+        .replace(/<=|≤/g, ' at most ')
+        .replace(/>=|≥/g, ' at least ')
+        .replace(/×/g, ' times ')
+        .replace(/÷/g, ' divided by ')
+        .replace(/—/g, ', ')
+        .replace(/·/g, ', ')
+        .replace(/[`*_#>|]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    const MAX_BLOCK = 450;
+    function splitBlockOnlyIfHuge(text) {
+      text = text.trim();
+      if (!text) return [];
+      if (text.length <= MAX_BLOCK) return [text];
+      const out = [];
+      let cur = '';
+      for (const s of text.split(/(?<=[.!?])\s+/)) {
+        if ((cur + ' ' + s).trim().length > MAX_BLOCK && cur) { out.push(cur); cur = s; }
+        else cur = (cur + ' ' + s).trim();
+        while (cur.length > MAX_BLOCK) {
+          let cut = cur.lastIndexOf(' ', MAX_BLOCK);
+          if (cut < 1) cut = MAX_BLOCK;
+          out.push(cur.slice(0, cut).trim());
+          cur = cur.slice(cut).trim();
+        }
+      }
+      if (cur) out.push(cur);
+      return out;
+    }
+
+    function collectBlocks(node, out) {
+      for (const child of Array.from(node.childNodes)) {
+        if (child.nodeType === 3) {
+          const t = child.textContent.trim();
+          if (t) out.push(t);
+          continue;
+        }
+        if (child.nodeType !== 1) continue;
+        const tag = child.tagName;
+        if (tag === 'SUMMARY') continue;
+        if (tag === 'UL' || tag === 'OL' || tag === 'DIV' || tag === 'TABLE' || tag === 'TBODY' || tag === 'THEAD' || tag === 'SECTION') {
+          collectBlocks(child, out);
+        } else if (tag === 'TR') {
+          const cells = Array.from(child.children).map(c => c.textContent.trim()).filter(Boolean);
+          if (cells.length) out.push(cells.length > 1 ? cells[0] + ': ' + cells.slice(1).join(', ') : cells[0]);
+        } else if (tag === 'LI') {
+          const clone = child.cloneNode(true);
+          clone.querySelectorAll('ul, ol').forEach(n => n.remove());
+          const t = clone.textContent.trim();
+          if (t) out.push(t);
+          child.querySelectorAll(':scope > ul, :scope > ol').forEach(n => collectBlocks(n, out));
+        } else {
+          const t = child.textContent.trim();
+          if (t) out.push(t);
+        }
+      }
+    }
+
+    function extractCardAudioData(detailsEl, displayNum) {
+      const summary = detailsEl.querySelector(':scope > summary');
+      let qText = '';
+      if (summary) {
+        const clone = summary.cloneNode(true);
+        clone.querySelectorAll('.qa-play-btn, .qa-tag-row, .qa-tag-pill').forEach(n => n.remove());
+        qText = normalizeForSpeech(clone.textContent.replace(/^\s*\[[^\]]+\]\s*/, ''));
+      }
+      const blocks = [];
+      collectBlocks(detailsEl, blocks);
+      let questionLines = splitBlockOnlyIfHuge(qText);
+      let answerLines = [];
+      blocks.forEach(b => { answerLines = answerLines.concat(splitBlockOnlyIfHuge(normalizeForSpeech(b))); });
+      if (!questionLines.length) questionLines = ['Question ' + displayNum];
+      if (!answerLines.length) answerLines = ['No answer text.'];
+      let sectionTitle = '';
+      const sec = detailsEl.closest('.md-section');
+      const h2 = sec ? sec.querySelector(':scope > h2') : null;
+      if (h2) {
+        const hc = h2.cloneNode(true);
+        hc.querySelectorAll('.check-btn').forEach(n => n.remove());
+        sectionTitle = hc.textContent.trim();
+      }
+      return { el: detailsEl, sectionTitle, questionLines, answerLines };
+    }
+
+    function formatTagLabel(tag) {
+      const map = { radar: 'Suggested', theory: 'Theory', practical: 'Practical' };
+      if (map[tag]) return map[tag];
+      return tag.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function rebuildAudioDeck() {
+      const prevEl = audioDeck[cardIdx] ? audioDeck[cardIdx].el : null;
+      const all = Array.from(mdContent.querySelectorAll('details'));
+      all.forEach(d => {
+        const sum = d.querySelector(':scope > summary');
+        if (sum && !sum.querySelector('.qa-play-btn')) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'qa-play-btn';
+          b.textContent = '▶ Listen';
+          b.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openAudioAtElement(d);
+          });
+          sum.insertBefore(b, sum.firstChild);
+        }
+        if (sum) {
+          sum.querySelectorAll('.qa-tag-row').forEach(n => n.remove());
+          const pills = [];
+          (d.getAttribute('data-tag') || '').split(/\s+/).filter(Boolean).forEach(t => pills.push([t, formatTagLabel(t)]));
+          (d.getAttribute('data-meta') || '').split('·').map(s => s.trim()).filter(Boolean).forEach(m => pills.push(['meta', m]));
+          if (d.getAttribute('data-review') === '1') pills.push(['review', '★ Review']);
+          if (pills.length) {
+            const row = document.createElement('span');
+            row.className = 'qa-tag-row';
+            row.setAttribute('aria-hidden', 'true');
+            pills.forEach(([k, label]) => {
+              const p = document.createElement('span');
+              p.className = 'qa-tag-pill tag-' + k;
+              p.textContent = label;
+              row.appendChild(p);
+            });
+            sum.appendChild(row);
+          }
+        }
+      });
+      const visible = all.filter(d => !d.classList.contains('hidden-by-filter'));
+      audioDeck = visible.map((d, i) => {
+        const c = extractCardAudioData(d, i + 1);
+        c.reviewKey = keyForDetails(d);
+        return c;
+      });
+      mdAudioBtn.disabled = audioDeck.length === 0;
+      const keep = prevEl ? audioDeck.findIndex(c => c.el === prevEl) : -1;
+      cardIdx = keep >= 0 ? keep : 0;
+      if (keep < 0) {
+        if (isPlaying) { isPlaying = false; cancelSpeechOnly(); }
+        section = 'question'; lineIdx = 0;
+        lastSpokenCard = -1; lastAnnouncedSection = null;
+      }
+      if (audioOpen) {
+        if (!audioDeck.length) closeAudioDock(); else renderAudioUI();
+      }
+    }
+
+    function populateVoices() {
+      if (!hasTTS) return;
+      const voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
+      const list = voices.length ? voices : speechSynthesis.getVoices();
+      const saved = lsGet('study-audio-voice', '');
+      audioVoiceSelect.innerHTML = '';
+      list.forEach(v => {
+        const o = document.createElement('option');
+        o.value = v.voiceURI;
+        o.textContent = v.name;
+        audioVoiceSelect.appendChild(o);
+      });
+      let pick = list.find(v => v.voiceURI === saved);
+      if (!pick) {
+        for (const re of [/natural/i, /online/i, /aria/i, /jenny/i, /guy/i, /google us english/i, /samantha/i, /zira/i]) {
+          pick = list.find(v => re.test(v.name));
+          if (pick) break;
+        }
+      }
+      if (!pick) pick = list[0];
+      if (pick) audioVoiceSelect.value = pick.voiceURI;
+    }
+
+    function currentVoice() {
+      if (!hasTTS) return null;
+      return speechSynthesis.getVoices().find(v => v.voiceURI === audioVoiceSelect.value) || null;
+    }
+
+    function cancelSpeechOnly() {
+      playSessionId++;
+      clearTimeout(stepTimer);
+      stepTimer = null;
+      activeUtterance = null;
+      if (hasTTS) speechSynthesis.cancel();
+    }
+
+    function currentLines() {
+      const c = audioDeck[cardIdx];
+      if (!c) return [];
+      return section === 'question' ? c.questionLines : c.answerLines;
+    }
+
+    function renderAudioUI(captionOverride, badgeOverride) {
+      const lines = currentLines();
+      const card = audioDeck[cardIdx];
+      audioPos.textContent = `Q ${audioDeck.length ? cardIdx + 1 : 0} / ${audioDeck.length}`;
+      audioBadge.textContent = badgeOverride === 'SECTION' ? 'SECTION' : (section === 'question' ? 'QUESTION' : 'ANSWER');
+      audioBadge.classList.toggle('is-answer', badgeOverride !== 'SECTION' && section === 'answer');
+      audioBadge.classList.toggle('is-section', badgeOverride === 'SECTION');
+      audioSectionTitle.textContent = card ? card.sectionTitle : '';
+      audioLinePos.textContent = `Part ${Math.min(lineIdx + 1, lines.length || 1)} / ${lines.length || 1}`;
+      audioLineText.textContent = captionOverride || lines[lineIdx] || '';
+      audioPlayBtn.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+      const flagged = !!(card && card.el.getAttribute('data-review') === '1');
+      audioReviewBtn.textContent = flagged ? '★ Review' : '☆ Review';
+      audioReviewBtn.classList.toggle('is-flagged', flagged);
+      syncPlaybackState();
+    }
+
+    function highlightCard() {
+      audioDeck.forEach((c, i) => c.el.classList.toggle('audio-active-card', i === cardIdx));
+      const c = audioDeck[cardIdx];
+      if (c && lastSpokenCard !== cardIdx) {
+        c.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        lastSpokenCard = cardIdx;
+      }
+    }
+
+    function speakCurrentLine(options = {}) {
+      const card = audioDeck[cardIdx];
+      if (!card) return;
+      if (!hasTTS) {
+        isPlaying = false;
+        renderAudioUI('Speech is not supported in this browser. Try Edge or Chrome.');
+        return;
+      }
+      cancelSpeechOnly();
+      const sid = playSessionId;
+      highlightCard();
+      saveAudioBookmark();
+      if (section === 'answer') card.el.open = true;
+      else if (recallPauseSec > 0 && lineIdx === 0) card.el.open = false;
+
+      if (section === 'question' && lineIdx === 0 && !options.skipSectionIntro &&
+          card.sectionTitle && card.sectionTitle !== lastAnnouncedSection) {
+        lastAnnouncedSection = card.sectionTitle;
+        const su = new SpeechSynthesisUtterance(normalizeForSpeech(card.sectionTitle));
+        activeUtterance = su;
+        const sv = currentVoice();
+        if (sv) su.voice = sv;
+        su.rate = audioRate;
+        su.lang = (sv && sv.lang) || 'en-US';
+        renderAudioUI(card.sectionTitle, 'SECTION');
+        su.onend = () => {
+          if (sid !== playSessionId || !isPlaying) return;
+          stepTimer = setTimeout(() => {
+            if (sid !== playSessionId || !isPlaying) return;
+            speakCurrentLine({ ...options, skipSectionIntro: true });
+          }, 450);
+        };
+        su.onerror = (ev) => {
+          if (sid !== playSessionId) return;
+          if (ev && (ev.error === 'canceled' || ev.error === 'interrupted')) return;
+          isPlaying = false;
+          renderAudioUI();
+        };
+        playChime('section');
+        speechSynthesis.speak(su);
+        return;
+      }
+
+      const lines = currentLines();
+      let text = lines[lineIdx] || '';
+      if (options.announceCard && section === 'question' && lineIdx === 0 && !/^(Week|Question|Section)\b/i.test(text)) {
+        text = 'Question ' + (cardIdx + 1) + '. ' + text;
+      }
+      if (section === 'answer' && lineIdx === 0) text = 'Answer. ' + text;
+
+      const u = new SpeechSynthesisUtterance(text);
+      activeUtterance = u;
+      const v = currentVoice();
+      if (v) u.voice = v;
+      u.rate = audioRate;
+      u.lang = (v && v.lang) || 'en-US';
+      renderAudioUI();
+
+      const later = (ms, fn) => {
+        stepTimer = setTimeout(() => {
+          if (sid !== playSessionId || !isPlaying) return;
+          fn();
+        }, ms);
+      };
+
+      u.onend = () => {
+        if (sid !== playSessionId || !isPlaying) return;
+        if (lineIdx + 1 < lines.length) {
+          later(350, () => { lineIdx++; speakCurrentLine(); });
+        } else if (section === 'question') {
+          if (recallPauseSec > 0) {
+            renderAudioUI('Recall pause (' + recallPauseSec + 's)…');
+            playChime('tick');
+          }
+          later(recallPauseSec > 0 ? recallPauseSec * 1000 : 600, () => {
+            section = 'answer'; lineIdx = 0;
+            playChime('section');
+            speakCurrentLine();
+          });
+        } else if (cardIdx + 1 < audioDeck.length) {
+          later(1100, () => {
+            playChime('nextQ');
+            cardIdx++; section = 'question'; lineIdx = 0;
+            speakCurrentLine({ announceCard: true });
+          });
+        } else {
+          isPlaying = false;
+          playChime('done');
+          renderAudioUI('Finished all questions.');
+        }
+      };
+      u.onerror = (ev) => {
+        if (sid !== playSessionId) return;
+        if (ev && (ev.error === 'canceled' || ev.error === 'interrupted')) return;
+        isPlaying = false;
+        renderAudioUI();
+      };
+      speechSynthesis.speak(u);
+    }
+
+    function openAudioDock() {
+      if (!audioDeck.length) return;
+      audioOpen = true;
+      audioDock.classList.add('open');
+      document.body.classList.add('audio-open');
+      mdAudioBtn.classList.add('is-active');
+      highlightCard();
+      renderAudioUI();
+    }
+
+    function openAudioAtElement(el) {
+      const i = audioDeck.findIndex(c => c.el === el);
+      if (i < 0) return;
+      cardIdx = i; section = 'question'; lineIdx = 0;
+      openAudioDock();
+      isPlaying = true;
+      playChime('play');
+      speakCurrentLine({ announceCard: true });
+    }
+
+    function closeAudioDock() {
+      isPlaying = false;
+      cancelSpeechOnly();
+      audioDeck.forEach(c => c.el.classList.remove('audio-active-card'));
+      lastSpokenCard = -1;
+      lastAnnouncedSection = null;
+      audioOpen = false;
+      audioDock.classList.remove('open');
+      document.body.classList.remove('audio-open');
+      mdAudioBtn.classList.remove('is-active');
+      syncPlaybackState();
+    }
+
+    function stopAudio() {
+      if (audioOpen) closeAudioDock(); else { isPlaying = false; cancelSpeechOnly(); }
+      audioDeck = [];
+      cardIdx = 0; section = 'question'; lineIdx = 0;
+    }
+
+    function togglePlayPause() {
+      if (isPlaying) {
+        isPlaying = false;
+        cancelSpeechOnly();
+        playChime('pause');
+        renderAudioUI();
+      } else {
+        isPlaying = true;
+        playChime('play');
+        speakCurrentLine();
+      }
+    }
+
+    function goNextQuestion() {
+      if (cardIdx + 1 >= audioDeck.length) { playChime('done'); return; }
+      cardIdx++; section = 'question'; lineIdx = 0;
+      isPlaying = true;
+      playChime('nextQ');
+      speakCurrentLine({ announceCard: true });
+    }
+
+    function goPrevQuestion() {
+      if (cardIdx > 0) cardIdx--;
+      section = 'question'; lineIdx = 0;
+      isPlaying = true;
+      playChime('prevQ');
+      speakCurrentLine({ announceCard: true });
+    }
+
+    function stepForwardLine() {
+      const c = audioDeck[cardIdx];
+      if (!c) return;
+      isPlaying = true;
+      playChime('stepFwd');
+      if (lineIdx + 1 < currentLines().length) lineIdx++;
+      else if (section === 'question') { section = 'answer'; lineIdx = 0; }
+      else if (cardIdx + 1 < audioDeck.length) { cardIdx++; section = 'question'; lineIdx = 0; }
+      speakCurrentLine();
+    }
+
+    function stepBackLine() {
+      const c = audioDeck[cardIdx];
+      if (!c) return;
+      isPlaying = true;
+      playChime('stepBack');
+      if (lineIdx > 0) lineIdx--;
+      else if (section === 'answer') { section = 'question'; lineIdx = c.questionLines.length - 1; }
+      else if (cardIdx > 0) { cardIdx--; section = 'answer'; lineIdx = audioDeck[cardIdx].answerLines.length - 1; }
+      speakCurrentLine();
+    }
+
+    function toggleSection() {
+      if (!audioDeck[cardIdx]) return;
+      isPlaying = true;
+      playChime('section');
+      section = section === 'question' ? 'answer' : 'question';
+      lineIdx = 0;
+      speakCurrentLine();
+    }
+
+    /* --- Audiobook extras: review flags, bookmark, media keys, section jump, replay --- */
+    let reviewSet = new Set();
+    let activeFilter = 'all';
+
+    function keyForDetails(d) {
+      const s = d.querySelector(':scope > summary');
+      const m = s ? s.textContent.match(/Question\s+\d+\.\d+/i) : null;
+      if (m) return m[0].toLowerCase().replace(/\s+/g, ' ');
+      return 'card-' + Array.from(mdContent.querySelectorAll('details')).indexOf(d);
+    }
+
+    function applyFilter(tag) {
+      activeFilter = tag;
+      mdContent.querySelectorAll('details').forEach(d => {
+        const tags = (d.getAttribute('data-tag') || '').split(/\s+/);
+        let hide = false;
+        if (tag === 'review') hide = d.getAttribute('data-review') !== '1';
+        else if (tag !== 'all') hide = !tags.includes(tag);
+        d.classList.toggle('hidden-by-filter', hide);
+      });
+      rebuildAudioDeck();
+    }
+
+    function updateReviewFilterLabel() {
+      const b = mdFilterBar.querySelector('[data-filter="review"]');
+      if (!b) return;
+      b.textContent = 'Review (' + mdContent.querySelectorAll('details[data-review="1"]').length + ')';
+    }
+
+    function saveReviewSet() {
+      if (activeFile) lsSet('study-review:' + activeFile.path, JSON.stringify(Array.from(reviewSet)));
+    }
+
+    function toggleReviewCurrent() {
+      const card = audioDeck[cardIdx];
+      if (!card) return;
+      const on = card.el.getAttribute('data-review') !== '1';
+      if (on) { card.el.setAttribute('data-review', '1'); reviewSet.add(card.reviewKey); }
+      else { card.el.removeAttribute('data-review'); reviewSet.delete(card.reviewKey); }
+      saveReviewSet();
+      playChime(on ? 'reviewOn' : 'reviewOff');
+      updateReviewFilterLabel();
+      if (activeFilter === 'review' && !on) {
+        card.el.classList.add('hidden-by-filter');
+      }
+      rebuildAudioDeck();
+      if (audioOpen) renderAudioUI();
+    }
+
+    function saveAudioBookmark() {
+      const card = audioDeck[cardIdx];
+      if (!activeFile || !card) return;
+      lsSet('study-audio-pos:' + activeFile.path, JSON.stringify({ key: card.reviewKey, cardIdx, section, lineIdx }));
+    }
+
+    function restoreAudioBookmark() {
+      if (!activeFile || !audioDeck.length) return;
+      let b = null;
+      try { b = JSON.parse(lsGet('study-audio-pos:' + activeFile.path, 'null')); } catch (e) {}
+      if (!b) return;
+      let i = audioDeck.findIndex(c => c.reviewKey === b.key);
+      if (i < 0) i = Math.min(Math.max(b.cardIdx || 0, 0), audioDeck.length - 1);
+      cardIdx = i;
+      section = b.section === 'answer' ? 'answer' : 'question';
+      lineIdx = Math.min(Math.max(b.lineIdx || 0, 0), Math.max(currentLines().length - 1, 0));
+      lastSpokenCard = -1;
+    }
+
+    function makeSilentWavUri() {
+      const sr = 8000, n = sr;
+      const buf = new Uint8Array(44 + n);
+      const dv = new DataView(buf.buffer);
+      const w = (o, s) => { for (let i = 0; i < s.length; i++) buf[o + i] = s.charCodeAt(i); };
+      w(0, 'RIFF'); dv.setUint32(4, 36 + n, true); w(8, 'WAVEfmt ');
+      dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+      dv.setUint32(24, sr, true); dv.setUint32(28, sr, true); dv.setUint16(32, 1, true); dv.setUint16(34, 8, true);
+      w(36, 'data'); dv.setUint32(40, n, true); buf.fill(128, 44);
+      let bin = '';
+      for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+      return 'data:audio/wav;base64,' + btoa(bin);
+    }
+    let silentAudio = null;
+
+    function syncPlaybackState() {
+      try {
+        if (!silentAudio) { silentAudio = new Audio(makeSilentWavUri()); silentAudio.loop = true; }
+        if (isPlaying && audioOpen) silentAudio.play().catch(() => {});
+        else silentAudio.pause();
+      } catch (e) {}
+      try {
+        if (!('mediaSession' in navigator)) return;
+        navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+        const card = audioDeck[cardIdx];
+        if (card && window.MediaMetadata) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: (card.questionLines[0] || 'Question').slice(0, 110),
+            artist: card.sectionTitle || 'Study Hub',
+            album: activeFile ? activeFile.title : 'Audiobook'
+          });
+        }
+      } catch (e) {}
+    }
+
+    function initMediaSession() {
+      if (!('mediaSession' in navigator)) return;
+      const set = (name, fn) => { try { navigator.mediaSession.setActionHandler(name, fn); } catch (e) {} };
+      set('play', () => { if (!audioDeck.length) return; if (!audioOpen) openAudioDock(); if (!isPlaying) togglePlayPause(); });
+      set('pause', () => { if (isPlaying) togglePlayPause(); });
+      set('previoustrack', () => { if (audioOpen) goPrevQuestion(); });
+      set('nexttrack', () => { if (audioOpen) goNextQuestion(); });
+      set('seekbackward', () => { if (audioOpen) stepBackLine(); });
+      set('seekforward', () => { if (audioOpen) stepForwardLine(); });
+      set('stop', () => { if (audioOpen) closeAudioDock(); });
+    }
+
+    function jumpSection(dir) {
+      if (!audioDeck.length) return;
+      const cur = audioDeck[cardIdx].sectionTitle;
+      let start = cardIdx;
+      while (start > 0 && audioDeck[start - 1].sectionTitle === cur) start--;
+      let target = -1;
+      if (dir > 0) {
+        for (let i = cardIdx + 1; i < audioDeck.length; i++) {
+          if (audioDeck[i].sectionTitle !== cur) { target = i; break; }
+        }
+        if (target < 0) { playChime('done'); return; }
+      } else if (start === 0) {
+        target = 0;
+      } else {
+        const prevTitle = audioDeck[start - 1].sectionTitle;
+        target = start - 1;
+        while (target > 0 && audioDeck[target - 1].sectionTitle === prevTitle) target--;
+      }
+      cardIdx = target; section = 'question'; lineIdx = 0;
+      isPlaying = true;
+      lastAnnouncedSection = null;
+      playChime(dir > 0 ? 'nextQ' : 'prevQ');
+      speakCurrentLine({ announceCard: true });
+    }
+
+    function replayCurrent() {
+      if (!audioDeck[cardIdx]) return;
+      lineIdx = 0;
+      isPlaying = true;
+      playChime('section');
+      speakCurrentLine({ skipSectionIntro: true });
+    }
+
+    /* --- Offline save (service worker) --- */
+    const OFFLINE_CACHE = 'study-hub-offline-v1';
+    const offlineSupported = 'serviceWorker' in navigator && 'caches' in window &&
+      (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+
+    function collectOfflineUrls() {
+      return [
+        './', './index.html', './manifest.json',
+        'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
+        'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
+        'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap',
+        ...allFilesList().map(f => './' + encodePath(f.path))
+      ];
+    }
+
+    function sendSwMessage(sw, payload) {
+      return new Promise(resolve => {
+        const ch = new MessageChannel();
+        const t = setTimeout(() => resolve(null), 90000);
+        ch.port1.onmessage = (e) => { clearTimeout(t); resolve(e.data); };
+        sw.postMessage(payload, [ch.port2]);
+      });
+    }
+
+    function setOfflineUi(on, info) {
+      offlineBtn.classList.toggle('is-offline-saved', on);
+      offlineBtn.textContent = on ? 'Offline Ready' : 'Save Offline';
+      offlineBtn.title = on
+        ? 'Saved for offline use' + (info && info.ok ? ' (' + info.ok + ' files). Click to remove.' : '. Click to remove.')
+        : 'Save all study guides for offline viewing and reload';
+    }
+
+    async function cacheAllOffline(silent) {
+      if (!offlineSupported) return;
+      try {
+        offlineBtn.disabled = true;
+        if (!silent) offlineBtn.textContent = 'Saving…';
+        await navigator.serviceWorker.register('./sw.js');
+        const reg = await navigator.serviceWorker.ready;
+        const sw = reg.active || navigator.serviceWorker.controller;
+        const r = sw ? await sendSwMessage(sw, { type: 'CACHE_ALL', urls: collectOfflineUrls() }) : null;
+        lsSet('study-offline-enabled', '1');
+        setOfflineUi(true, r);
+      } catch (e) {
+        setOfflineUi(false);
+        offlineBtn.title = 'Could not save offline: ' + (e && e.message ? e.message : e);
+      } finally {
+        offlineBtn.disabled = false;
+      }
+    }
+
+    async function clearOfflineCache() {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) {
+          if (r.active) await sendSwMessage(r.active, { type: 'CLEAR_CACHE' });
+        }
+        await caches.delete(OFFLINE_CACHE);
+        for (const r of regs) await r.unregister();
+      } catch (e) {}
+      lsSet('study-offline-enabled', '0');
+      setOfflineUi(false);
+    }
+
+    async function initOffline() {
+      if (!offlineSupported) {
+        offlineBtn.disabled = true;
+        offlineBtn.title = 'Offline saving needs HTTPS (GitHub Pages) or localhost.';
+        return;
+      }
+      let has = false;
+      try { has = await caches.has(OFFLINE_CACHE); } catch (e) {}
+      if (has && lsGet('study-offline-enabled', '0') === '1') {
+        setOfflineUi(true);
+        if (navigator.onLine) cacheAllOffline(true);
+      } else {
+        setOfflineUi(false);
+      }
+    }
+
+    offlineBtn.addEventListener('click', () => {
+      if (offlineBtn.disabled) return;
+      if (offlineBtn.classList.contains('is-offline-saved')) clearOfflineCache();
+      else cacheAllOffline(false);
+      offlineBtn.blur();
+    });
+    window.addEventListener('offline', () => { sourceStatus.textContent = 'offline cache'; });
+
+    const audioActions = [
+      [audioPrevSec, () => jumpSection(-1)], [audioNextSec, () => jumpSection(1)],
+      [audioReplayBtn, replayCurrent], [audioReviewBtn, toggleReviewCurrent],
+      [audioPrevQ, goPrevQuestion], [audioPrevLine, stepBackLine], [audioPlayBtn, togglePlayPause],
+      [audioNextLine, stepForwardLine], [audioNextQ, goNextQuestion], [audioToggleSection, toggleSection],
+      [audioCloseBtn, closeAudioDock]
+    ];
+    audioActions.forEach(([btn, fn]) => btn.addEventListener('click', () => { fn(); btn.blur(); }));
+
+    mdAudioBtn.addEventListener('click', () => {
+      if (mdAudioBtn.disabled || !audioDeck.length) return;
+      if (audioOpen) { closeAudioDock(); return; }
+      openAudioDock();
+      mdAudioBtn.blur();
+    });
+
+    audioRateSelect.value = String(audioRate);
+    if (audioRateSelect.value !== String(audioRate)) { audioRate = 1; audioRateSelect.value = '1'; }
+    audioRateSelect.addEventListener('change', () => {
+      audioRate = parseFloat(audioRateSelect.value) || 1;
+      lsSet('study-audio-rate', String(audioRate));
+      if (isPlaying) speakCurrentLine();
+      audioRateSelect.blur();
+    });
+    audioVoiceSelect.addEventListener('change', () => {
+      lsSet('study-audio-voice', audioVoiceSelect.value);
+      if (isPlaying) speakCurrentLine();
+      audioVoiceSelect.blur();
+    });
+    audioRecallBtn.textContent = 'Recall: ' + recallPauseSec + 's';
+    audioRecallBtn.addEventListener('click', () => {
+      recallPauseSec = recallPauseSec === 0 ? 3 : 0;
+      lsSet('study-audio-recall', String(recallPauseSec));
+      audioRecallBtn.textContent = 'Recall: ' + recallPauseSec + 's';
+      audioRecallBtn.blur();
+    });
+
+    if (hasTTS) {
+      populateVoices();
+      speechSynthesis.addEventListener('voiceschanged', populateVoices);
+    }
+    window.addEventListener('beforeunload', () => cancelSpeechOnly());
+    initMediaSession();
+
     /* --- View Switching --- */
     function showPane(pane) {
       [overviewPane, mdPane].forEach(p => p.classList.remove('active'));
@@ -1842,6 +2745,8 @@
     }
 
     function showOverview() {
+      stopAudio();
+      mdAudioBtn.disabled = true;
       activeFile = null;
       rawMarkdown = '';
       breadcrumb.innerHTML = '<strong>Overview</strong>';
@@ -1854,6 +2759,9 @@
     }
 
     async function openFile(file, pushHash = true) {
+      stopAudio();
+      mdAudioBtn.disabled = true;
+      const reqId = ++openFileSeq;
       activeFile = file;
       breadcrumb.innerHTML = `${escapeHtml(file.subject)} / ${escapeHtml(file.group)} / <strong>${escapeHtml(file.title)}</strong>`;
       const encodedUrl = './' + encodePath(file.path);
@@ -1880,11 +2788,14 @@
       try {
         const res = await fetch(encodedUrl);
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        rawMarkdown = await res.text();
+        const text = await res.text();
+        if (reqId !== openFileSeq) return;
+        rawMarkdown = text;
         mdContent.innerHTML = marked.parse(rawMarkdown);
         enhanceMarkdownStructure(file.path);
         await renderMermaidInMd();
       } catch (err) {
+        if (reqId !== openFileSeq) return;
         mdContent.innerHTML = `<p>Could not load <code>${escapeHtml(file.path)}</code>: ${escapeHtml(String(err))}</p>`;
         mdOutline.classList.add('hidden');
       }
@@ -1907,7 +2818,28 @@
 
     document.addEventListener('keydown', (e) => {
       const tag = document.activeElement && document.activeElement.tagName;
-      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA';
+      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+      if (audioOpen && !isTyping && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        let fn = null;
+        if (e.code === 'Space') fn = togglePlayPause;
+        else if (e.shiftKey && e.key === 'ArrowDown') fn = () => jumpSection(1);
+        else if (e.shiftKey && e.key === 'ArrowUp') fn = () => jumpSection(-1);
+        else if (!(e.shiftKey && e.key.startsWith('Arrow'))) {
+          const map = {
+            ArrowDown: goNextQuestion, ArrowUp: goPrevQuestion,
+            ArrowRight: stepForwardLine, ArrowLeft: stepBackLine,
+            Enter: toggleSection, Escape: closeAudioDock,
+            r: replayCurrent, R: replayCurrent, m: toggleReviewCurrent, M: toggleReviewCurrent
+          };
+          fn = map[e.key];
+        }
+        if (fn) {
+          e.preventDefault();
+          if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+          fn();
+          return;
+        }
+      }
       if ((e.key === '/' && !isTyping) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) {
         e.preventDefault();
         if (sidebar.classList.contains('collapsed')) sidebar.classList.remove('collapsed');
@@ -1937,6 +2869,7 @@
       updateThemeButton();
       renderTimer();
       manifestData = await loadManifest();
+      initOffline();
       renderSidebarAndGrid('');
       const fromHash = resolveHash();
       const all = allFilesList();
