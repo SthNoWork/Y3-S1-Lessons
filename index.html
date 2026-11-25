@@ -2081,15 +2081,15 @@
         }
         if (child.nodeType !== 1) continue;
         const tag = child.tagName;
-        if (tag === 'SUMMARY') continue;
+        if (tag === 'SUMMARY' || child.hasAttribute('data-no-audio')) continue;
         if (tag === 'UL' || tag === 'OL' || tag === 'DIV' || tag === 'TABLE' || tag === 'TBODY' || tag === 'THEAD' || tag === 'SECTION') {
           collectBlocks(child, out);
         } else if (tag === 'TR') {
-          const cells = Array.from(child.children).map(c => c.textContent.trim()).filter(Boolean);
+          const cells = Array.from(child.children).filter(c => !c.hasAttribute('data-no-audio')).map(c => c.textContent.trim()).filter(Boolean);
           if (cells.length) out.push(cells.length > 1 ? cells[0] + ': ' + cells.slice(1).join(', ') : cells[0]);
         } else if (tag === 'LI') {
           const clone = child.cloneNode(true);
-          clone.querySelectorAll('ul, ol').forEach(n => n.remove());
+          clone.querySelectorAll('ul, ol, [data-no-audio]').forEach(n => n.remove());
           const t = clone.textContent.trim();
           if (t) out.push(t);
           child.querySelectorAll(':scope > ul, :scope > ol').forEach(n => collectBlocks(n, out));
@@ -2105,14 +2105,16 @@
       let qText = '';
       if (summary) {
         const clone = summary.cloneNode(true);
-        clone.querySelectorAll('.qa-play-btn, .qa-tag-row, .qa-tag-pill').forEach(n => n.remove());
+        clone.querySelectorAll('.qa-play-btn, .qa-tag-row, .qa-tag-pill, [data-no-audio]').forEach(n => n.remove());
         qText = normalizeForSpeech(clone.textContent.replace(/^\s*\[[^\]]+\]\s*/, ''));
       }
       const blocks = [];
       collectBlocks(detailsEl, blocks);
       let questionLines = splitBlockOnlyIfHuge(qText);
       let answerLines = [];
-      blocks.forEach(b => { answerLines = answerLines.concat(splitBlockOnlyIfHuge(normalizeForSpeech(b))); });
+      blocks.forEach(b => {
+        answerLines = answerLines.concat(splitBlockOnlyIfHuge(normalizeForSpeech(b)));
+      });
       if (!questionLines.length) questionLines = ['Question ' + displayNum];
       if (!answerLines.length) answerLines = ['No answer text.'];
       let sectionTitle = '';
