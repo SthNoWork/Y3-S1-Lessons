@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T03:41:57.594Z",
+  "generatedAt": "2026-11-26T10:23:15.789Z",
   "subjects": [
     {
       "name": "Software Architecture",
@@ -7,6 +7,12 @@
         {
           "name": "Midterm",
           "files": [
+            {
+              "title": "Course Overview",
+              "name": "overview.md",
+              "path": "Software Architecture/Midterm/overview.md",
+              "type": "md"
+            },
             {
               "title": "Study Guide",
               "name": "study.md",

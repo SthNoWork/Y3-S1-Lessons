@@ -9,22 +9,21 @@
   - **Silent tag pills & non-spoken notes**: `.qa-tag-row`/`.qa-tag-pill` rendered in `<summary>` from `data-tag` + `data-meta` + `data-review`; stripped from TTS (`extractCardAudioData`). Elements with `data-no-audio` inside `<details>` are skipped by `collectBlocks()` (no hardcoded text filters).
 - `sw.js`: service worker (network-first, cache-fallback, active only while cache `study-hub-offline-v1` exists). Handles `CACHE_ALL` / `CLEAR_CACHE` messages from `#offlineBtn`; serves cached `index.html` for offline navigations so page reloads work offline (needs HTTPS/GitHub Pages or localhost; not `file://`).
 - `manifest.json`: auto-indexed `.md` tree.
-- `.github/workflows/pages.yml`: on push to `main`/`master`, scans subject folders for `.md` and `.pdf` (`study.md` → `quiz.md` → alphabetical), regenerates `manifest.json`, deploys Pages.
+- `.github/workflows/pages.yml`: on push to `main`/`master`, scans subject folders for `.md` and `.pdf` (`overview.md` → `study.md` → `quiz.md` → alphabetical), regenerates `manifest.json`, deploys Pages.
 - `#pdfPane` / `#pdfFrame` in `index.html`: renders `.pdf` slides inline (with `Open PDF` topbar link and offline caching via `sw.js`).
-- `Software Architecture/Midterm/quiz.md`: Course Overview + Big-Picture Mermaid diagram + Quick-reference tables (incl. 99.99%, HTTP Status Codes, RabbitMQ/Kafka Model) + 7 sections (`## Section 1 — Week 1: …` .. `## Section 7 — Week 7: …`), 74 cards `Question N.M:` (enriched with CAP/GPS trade-offs, RFC 1918 ranges, TCP handshake, HPACK, A/CNAME, SameSite=None, PATCH/Origin, Strict vs Open Layering & Two Generals' Mermaid diagrams, Resilience4j) + `Final 10-Minute Rapid Review Traps`.
-- `Software Architecture/Midterm/study.md`: Course Overview (core dilemma, 6 core ideas, 7-week arc, FoodHub actors/subsystems, Big-Picture Mermaid) + Master brief + HTTP Status Codes + 9 sections: `Section 1` Suggested (`Question 1.1`–`1.12`), `Sections 2–8` Weeks 1–7 (`Question 2.1`–`8.6` enriched with CAP/GPS trade-offs, RFC 1918/TCP handshake/A vs CNAME/HPACK/XFF spoofing, JWT parts/`SameSite=None`/`PATCH`/`Origin`, Strict vs Open Layering + Driving/Driven Ports, Two Generals' `sequenceDiagram`) + Practical Templates + `Final 10-Minute Rapid Review Traps` + `Section 9` Mock Midterm (`Question 9.1`–`9.10`).
+- `Software Architecture/Midterm/overview.md`: plain-English Course Overview (exact Week 1 Slide 6 quotes, simplified 6 Core Ideas, 16-week map, FoodHub numbers/constraints, HTTP status codes, Hard Vocabulary Decoder).
+- `Software Architecture/Midterm/quiz.md`: Quick-reference tables + 7 sections (`## Section 1 — Week 1: …` .. `## Section 7 — Week 7: …`), all 91 original quiz questions 1-to-1 (`Question 1.1`–`7.13`) with exact instructor answer keys & rubrics (points/`Teacher Highlight` in `data-meta`).
+- `Software Architecture/Midterm/study.md`: Exam blueprint + link to `overview.md`, `Section 1` Suggested (`Question 1.1`–`1.12`), `Sections 2–8` Weeks 1–7 (`Question 2.1`–`8.6` with exact slide/handout wording & `**Key takeaway:**` first), Practical Templates, `Section 9` Mock Midterm (`Question 9.1`–`9.10`).
 - `Software Architecture/Midterm/TeachersNode.md`: exam specs (Fri 27 Nov 2026, ~10 open questions, no QCM, 30% grade, 60% theory "explain" / 40% practical, Weeks 1–7).
-- `Software Architecture/Lectures|Quizes/*`: source slides/handouts/quizzes (read in full).
+- `Software Architecture/Slides|Practical|Quizes/*`: source slides/handouts/quizzes (read in full).
 
 ## 3. Markdown Authoring Spec (Instructions for Converting Any Future Subject)
 Follow this exact structure when converting new lectures, slides, handouts, or quizzes into `.md` so the renderer, section/tag filters, and audiobook work cleanly without code changes:
-1. **Path & order:** Save under `<Subject>/<Topic>/<file>.md` (plus `.pdf` slides if any). `study.md` sorts first, `quiz.md` second, then alphabetical. Push to `main`; `.github/workflows/pages.yml` rebuilds `manifest.json`.
-2. **Standard guide layout order (`study.md` & `quiz.md`):**
-   - `# <Subject> — Study/Quiz Guide` → `> [!IMPORTANT]` Exam Blueprint (date, format, weights, scope).
-   - `## Course Overview — What is <Subject>?`: plain-English definition + analogy, `> [!NOTE]` core dilemma, ~6 core ideas behind the subject, week-by-week arc table, recurring case study (actors, modules, exam lenses) + big-picture `flowchart TD` Mermaid diagram.
-   - Quick-Reference tables (formulas, status/cheat sheets, comparisons, Hard Vocabulary & Decoder table).
-   - `## Section <N> — <Clear Title>` Q&A groups in order `1 → K` (audiobook announces `##` headings; `#mdSectionFilter` populates from them). For `study.md`, start with `Section 1` Suggested (`radar`) + Quiz-vs-Lecture Gap Matrix, then Weeks `1..K`.
-   - `Practical Exam Templates` → `## Final 10-Minute Rapid Review Traps` (10 numbered traps) → `## Section <Last> — Mock Exam` (`study.md`).
+1. **Path & order:** Save under `<Subject>/<Topic>/<file>.md` (plus `.pdf` slides if any). `overview.md` sorts first (`Course Overview`), `study.md` second (`Study Guide`), `quiz.md` third (`Quiz Guide`), then alphabetical. Push to `main`; `.github/workflows/pages.yml` rebuilds `manifest.json`.
+2. **Standard guide layout order (`overview.md`, `study.md`, `quiz.md`):**
+   - `overview.md`: exact course definition quotes, plain-English 6 Core Ideas (simple everyday wording), week-by-week course map, recurring case study + numbers, HTTP/quick reference, Hard Vocabulary Decoder.
+   - `study.md`: `# <Subject> — Master Study Guide` → `> [!IMPORTANT]` Exam Blueprint → link to `overview.md` → `Section 1` Suggested (`radar`) + Gap Matrix → `Sections 2..K` Weeks (`exact source wording` from slides/handouts, never altered/dropped) → `Practical Exam Templates` → `Section <Last>` Mock Exam.
+   - `quiz.md`: Quick-Reference tables + `## Section <N> — Week <N>: <Title>` with all quiz questions mapped 1-to-1 verbatim with instructor answer keys & rubrics.
 3. **One topic per card (no mega-cards):** Split multi-part topics into focused `<details>` cards phrased directly as **how the exam asks it** (aim for `<summary>` ≤ ~150 chars). Never cram 3–4 unrelated sub-questions into one card.
 4. **Card attributes (`data-tag`, `data-meta`):**
    - `<details data-tag="..." data-meta="...">`

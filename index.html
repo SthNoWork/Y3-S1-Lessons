@@ -1504,6 +1504,7 @@
 
     function humanizeTitle(filename) {
       const lower = filename.toLowerCase();
+      if (lower === 'overview.md') return 'Course Overview';
       if (lower === 'study.md') return 'Study Guide';
       if (lower === 'quiz.md') return 'Quiz Guide';
       const base = filename.replace(/\.(md|pdf)$/i, '');
@@ -1517,9 +1518,10 @@
 
     function rankFile(name) {
       const lower = name.toLowerCase();
-      if (lower === 'study.md') return 0;
-      if (lower === 'quiz.md') return 1;
-      return 2;
+      if (lower === 'overview.md') return 0;
+      if (lower === 'study.md') return 1;
+      if (lower === 'quiz.md') return 2;
+      return 3;
     }
 
     /* --- Auto-Discovery --- */

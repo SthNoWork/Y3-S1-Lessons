@@ -161,7 +161,7 @@ flowchart TD
 
 ## Section 1 — Week 1: Introduction to Software Architecture
 
-Covers: what architecture is and why it matters; requirements vs quality attributes vs constraints; measurable quality attribute scenarios; trade-offs.
+Covers: week 1 learning outcomes: what architecture is and why it matters; requirements vs quality attributes vs constraints; measurable quality attribute scenarios.
 
 ```mermaid
 flowchart LR
@@ -174,118 +174,130 @@ flowchart LR
   T1 -->|"Accept & fix later"| A["Availability First"]
 ```
 
-### Theory & Concept Questions ("Explain…")
+### Theory & Concept Questions (Part A)
 
 <details data-tag="theory">
-<summary><strong>Question 1.1:</strong> Explain what software architecture is (Bass, Clements &amp; Kazman) and why a feature list, a class diagram, or a language choice alone is not the architecture.</summary>
+<summary><strong>Question 1.1: Explain what software architecture is, and why a list of features, a class diagram, or the choice of programming language is not enough.</strong></summary>
 
-Software architecture is the **set of structures needed to reason about the system**: its elements, their relations, and the properties of both.
+**Answer:** Software architecture is **the set of structures needed to reason about the system: elements, their relations, and the properties of both**.
 
-A feature list only describes functionality; a class diagram is just one design view; and a programming language is a single (often minor) decision rather than the system-wide structures.
+- **Explanation (Key):** The Bass, Clements and Kazman definition. A list of features is functionality, a class diagram is one design view, and the choice of programming language is a single (often minor) decision.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 1.2:</strong> Explain why deciding that FoodHub's ordering and delivery communicate through events instead of direct calls is an architectural decision, whereas variable naming, a local sort algorithm, or button colour is not.</summary>
+<summary><strong>Question 1.2: Explain why deciding that ordering and delivery communicate through events instead of direct calls is an architectural decision for FoodHub, whereas variable naming, a sorting algorithm, or button colour is not.</strong></summary>
 
-Event-based communication between ordering and delivery is **expensive to change** later, affects many parts of the system, and directly drives multiple quality attributes (coupling, availability, scalability).
+**Answer:** Deciding that ordering and delivery communicate through events instead of direct calls is an architectural decision.
 
-Variable names, sorting algorithms, and UI button colours are local and cheap to change.
-
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 1.3:</strong> Explain the difference between a functional requirement and a constraint using FoodHub's order cancellation rule and its "8 developers in 6 months" mandate.</summary>
-
-*"A customer can cancel an order before the restaurant accepts it"* is a **functional requirement** because it describes what the system does, with no specification of "how well."
-
-*"Built by the existing team of 8 developers and launch within 6 months"* is a **constraint** because it is a fixed decision already made for the architect (team size and deadline).
+- **Explanation (Key):** It is expensive to change and affects many parts and several qualities. Naming a variable, choosing a sorting algorithm, and choosing the colour of the “Order now” button are local and cheap to change.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 1.4:</strong> Explain why "The app must be fast" fails as an architectural requirement compared with "95% of menu pages load within 1 second during the lunch peak."</summary>
+<summary><strong>Question 1.3: Explain why “A customer can cancel an order before the restaurant accepts it.” is a functional requirement rather than a quality attribute, constraint, or scenario.</strong></summary>
 
-Vague adjectives ("fast", "highly available", "secure against hackers") cannot be tested or used to guide design decisions.
+**Answer:** It is a **functional requirement**.
 
-A measurable requirement pairs a concrete **measure** (`95% within 1 second`) with a specific **environment** (`during the lunch peak`).
-
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 1.5:</strong> Explain what the "environment" part of a quality attribute scenario represents.</summary>
-
-The **environment** describes the system's operating conditions when the stimulus arrives—for example, normal operation, lunch/dinner peak load, or during a deployment (not the cloud provider or developer IDE).
+- **Explanation (Key):** It describes what the system does, with no “how well”.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 1.6:</strong> Explain how to calculate the allowed monthly downtime for a service with 99.9% availability over a 30-day month.</summary>
+<summary><strong>Question 1.4: Explain why “The system must be built by the existing team of 8 developers and launch within 6 months.” is a constraint.</strong></summary>
 
-Total minutes in a 30-day month: `30 × 24 × 60 = 43,200 minutes`.
+**Answer:** It is a **constraint**.
 
-Allowed downtime = `0.1% (0.001) × 43,200 ≈ 43 minutes`.
-
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 1.7:</strong> Explain why software architects focus primarily on quality attributes rather than functional features.</summary>
-
-Almost any software structure can deliver the required functional features, but **only specific structures** can deliver the required speed, availability, and security.
+- **Explanation (Key):** A decision already made for the architect (team and deadline).
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 1.8:</strong> Explain Conway's Law and distinguish it from Moore's Law and Brooks's Law.</summary>
+<summary><strong>Question 1.5: Explain why “95% of menu pages load within 1 second during the lunch peak.” is written in a measurable way compared with “fast”, “highly available”, or “secure against hackers”.</strong></summary>
 
-**Conway's Law:** Systems tend to mirror the communication structure of the organisation that builds them.
+**Answer:** Only “95% of menu pages load within 1 second during the lunch peak” is measurable.
 
-By contrast, Moore's Law is transistor doubling every two years, and Brooks's Law is that adding developers to a late project makes it later.
+- **Explanation (Key):** Only it has a measure (`95%`, `1 s`) and an environment (`lunch peak`).
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 1.9:</strong> Explain the architectural trade-off FoodHub faces when deciding whether to reject orders when restaurant stock data might be stale or accept them and fix problems later.</summary>
+<summary><strong>Question 1.6: Explain what the environment describes in a quality attribute scenario.</strong></summary>
 
-This is a trade-off between **consistency and availability** (CAP Theorem): rejecting uncertain orders prioritises consistency first, whereas accepting orders and resolving issues later prioritises availability first.
+**Answer:** The environment describes **the conditions when the stimulus happens (for example normal operation, peak load, or during a deployment)**.
+
+- **Explanation (Key):** Environment = the conditions under which the stimulus arrives (not the cloud provider, users, or developer programming environment).
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 1.7: Explain how to calculate how much downtime is allowed when a service must be available 99.9% of a 30-day month.</strong></summary>
+
+**Answer:** About **43 minutes** of downtime is allowed.
+
+- **Explanation (Key):** `30 × 24 × 60 = 43,200 min`; `0.1% ≈ 43 min`.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 1.8: Explain why architects pay most attention to quality attributes rather than features.</strong></summary>
+
+**Answer:** **Almost any structure can deliver the features, but only some structures deliver the required speed, availability and security.**
+
+- **Explanation (Key):** Features can be delivered by many structures; qualities depend on the structure.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 1.9: Explain what Conway’s law says, and distinguish it from Moore’s law and Brooks’s law.</strong></summary>
+
+**Answer:** Conway’s law says that **systems tend to mirror the communication structure of the organisation that builds them**.
+
+- **Explanation (Key):** Transistor doubling every two years is **Moore’s law**, and adding developers to a late project makes it later is **Brooks’s law**.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 1.10: Explain the trade-off when FoodHub can either reject orders when the restaurant’s stock data might be out of date, or accept them and fix problems later.</strong></summary>
+
+**Answer:** This is a trade-off between **consistency and availability**.
+
+- **Explanation (Key):** Rejecting = consistency first; accepting = availability first. (Comes back in week 11.)
 
 </details>
 
 ### Practical Questions (Part B)
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 1.10:</strong> Classify each statement as Functional (F), Quality Attribute (Q), or Constraint (C), and give a one-line reason: (a) Riders see customer address only after accepting delivery; (b) Customers can rate a restaurant after delivery; (c) Payments must go through the KHQR standard.</summary>
+<summary><strong>Question 1.11: Classify each statement as a functional requirement (F), quality attribute (Q) or constraint (C), and give a one-line reason: (a) Riders see the customer’s address only after accepting the delivery; (b) Customers can rate a restaurant after delivery; (c) Payments must go through the KHQR standard.</strong></summary>
 
-- **a) Q (Security / Confidentiality):** It restricts who sees personal data; the feature is "show address," while the restriction is a quality. *(Also acceptable as F if explained as an access-control feature tied to security.)*
-- **b) F (Functional):** Describes a user-facing feature (what the system does).
-- **c) C (Constraint):** The payment standard is fixed externally, not chosen by the team.
+- **a) Q** (security/confidentiality: it limits who sees personal data; the feature is “show address”, the restriction is a quality). *(Also accept “F” if explained as an access-control feature that identifies the security concern.)*
+- **b) F** (describes what the system does).
+- **c) C** (the payment standard is fixed, not chosen by the team).
 
-**Rubric (3 pts):** 1 pt per correct classification; the one-line reason is required for full marks.
+**Rubric (3 pts):** 1 point per correct classification; the reason is required for full marks on that item.
 
 </details>
 
 <details data-tag="practical" data-meta="4 pts">
-<summary><strong>Question 1.11:</strong> Rewrite this vague requirement as a complete quality attribute scenario with all six parts: "FoodHub should keep working when a server fails."</summary>
+<summary><strong>Question 1.12: Rewrite this vague requirement as a complete quality attribute scenario with all six parts: “FoodHub should keep working when a server fails.”</strong></summary>
 
-- **Source:** Hardware failure (internal/infrastructure).
-- **Stimulus:** One of the three order-service servers stops responding.
-- **Artifact:** Order service.
-- **Environment:** During dinner peak load.
+- **Source & Stimulus:** Hardware failure / one of the three order-service servers stops.
+- **Artifact & Environment:** Order service / during dinner peak.
 - **Response:** Traffic is routed to the remaining servers; orders in progress are not lost.
-- **Measure:** Fewer than 1% of requests fail, recovery takes no more than 30 seconds, and zero confirmed orders are lost.
+- **Measure:** Fewer than 1% of requests fail, for no more than 30 seconds; no confirmed orders lost.
 
-**Rubric (4 pts):** 1 pt concrete source & stimulus; 1 pt artifact & environment; 1 pt system response behaviour; 1 pt numeric measure with units.
+**Rubric (4 pts):** 1 pt concrete source & stimulus; 1 pt artifact & environment; 1 pt response describes system behaviour; 1 pt measure is a number with a unit.
 
 </details>
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 1.12:</strong> Name one trade-off FoodHub faces (e.g., performance vs freshness, cost vs availability, usability vs security, or time-to-market vs maintainability). State which side you choose and why.</summary>
+<summary><strong>Question 1.13: Name one trade-off FoodHub faces that is not on the slides. Say which side you would choose, and why.</strong></summary>
 
-**Example 1 (Cost vs Availability):** Running a second active data centre improves availability but doubles infrastructure cost and operational complexity. For FoodHub's early stage in one region, choose **lower cost with single-region multi-AZ backups** because budget and an 8-developer team cannot sustain multi-region active-active operations yet.
+- **Valid examples (Rubric):** Performance vs data freshness of rider location, cost vs availability of a second data centre, usability vs security of one-tap reorder, or time to market vs maintainability.
+- **Model choice (Cost vs Availability):** Choose single-region with backups over a second active data centre for launch, because FoodHub has 8 developers, a 6-month deadline, and a fixed monthly budget.
 
-**Example 2 (Rider GPS Freshness vs Battery & Bandwidth):** Reporting GPS every 1 s gives ultra-fresh tracking but drains budget Android rider batteries over 8-hour shifts and spikes ingress; every 30 s feels jerky. Choose **dynamic 5–10 s updates while moving (paused when stopped)**.
-
-**Rubric (3 pts):** 1 pt real conflict between two qualities; 1 pt choosing a side; 1 pt reason tied to FoodHub's users, numbers, or constraints.
+**Rubric (3 pts):** 1 pt real conflict between two qualities; 1 pt choosing a side; 1 pt reason tied to FoodHub (its users, numbers or constraints).
 
 </details>
 
@@ -293,7 +305,7 @@ This is a trade-off between **consistency and availability** (CAP Theorem): reje
 
 ## Section 2 — Week 2: Designing and Documenting Architecture
 
-Covers: C4 diagrams, sequence diagrams, ADRs, system-level design principles, the 6-step design process, and back-of-the-envelope estimates.
+Covers: C4 diagrams, sequence diagrams, ADRs, system-level design principles, the design process and back-of-the-envelope estimates.
 
 ```mermaid
 flowchart LR
@@ -315,101 +327,135 @@ flowchart LR
   end
 ```
 
-### Theory & Concept Questions ("Explain…")
+### Theory & Concept Questions (Part A)
 
 <details data-tag="theory">
-<summary><strong>Question 2.1:</strong> Explain what a "container" means in the C4 model and why it does not mean a Docker container.</summary>
+<summary><strong>Question 2.1: Explain what a “container” is in the C4 model, and why it does not mean a Docker container.</strong></summary>
 
-In C4, a **container** is any separately running process or data store—such as a mobile app, a backend API, or a database. It may happen to run inside Docker, but the C4 term refers to runtime/deployment boundaries, not Docker technology.
+**Answer:** Something that runs or stores data separately, such as a mobile app, an API or a database.
+
+- **Explanation (Key):** A C4 container is a separately running or data-storing unit. It may run in Docker, but that is not what the word means.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 2.2:</strong> Explain which elements appear on a C4 System Context diagram versus a C4 Container diagram (using Customer, Payment Gateway, SMS Provider, FoodHub box, and PostgreSQL).</summary>
+<summary><strong>Question 2.2: Explain which diagram shows the payment gateway and the SMS provider as boxes outside FoodHub.</strong></summary>
 
-**System Context (Level 1)** treats FoodHub as a single box and focuses on the people (Customer) and external systems (Payment Gateway, SMS Provider) around it.
+**Answer:** The **system context diagram** (C4 Level 1).
 
-**Container Diagram (Level 2)** zooms inside FoodHub, so internal containers like the **PostgreSQL database** appear at Level 2, not Level 1.
-
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 2.3:</strong> Explain the roles of "Context" and "Consequences" in an ADR, and explain why an outdated accepted ADR should be superseded rather than edited or deleted.</summary>
-
-**Context** records the facts and forces at the time the decision was made; **Consequences** record the resulting trade-offs (good and bad).
-
-ADRs are **immutable**: when a decision changes a year later, you write a **new ADR that supersedes the old one** so the historical reasoning remains intact.
+- **Explanation (Key):** External systems and people are the focus of the context diagram.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 2.4:</strong> Explain how to convert 1,000,000 requests/day into average QPS, and why we design for peak load rather than average load.</summary>
+<summary><strong>Question 2.3: Explain why the PostgreSQL database belongs on a container diagram but not on the system context diagram.</strong></summary>
 
-Average QPS = `1,000,000 ÷ 86,400 seconds/day ≈ 11.6 ≈ 12 requests/second`.
+**Answer:** **The PostgreSQL database** belongs on the container diagram (Level 2), not the system context diagram.
 
-We design for the **peak** (e.g., lunch peak) because a system sized only for the daily average will fail during busy hours when the most users are active.
-
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 2.5:</strong> Explain the relative speed ordering of RAM access, an in-data-centre network round trip, reading 1 MB from SSD, and a Phnom Penh–Singapore round trip.</summary>
-
-From fastest to slowest: **Reading from RAM (~100 ns)** → **In-DC round trip (~0.5 ms)** → **Reading 1 MB from SSD (~1 ms)** → **Phnom Penh–Singapore round trip (~30–50 ms)**.
+- **Explanation (Key):** The database is inside FoodHub, so it appears only when we zoom in (level 2).
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 2.6:</strong> Explain why a system with three parts matching three teams (mobile, backend, payments) illustrates Conway's Law.</summary>
+<summary><strong>Question 2.4: Explain which part of an ADR records the facts and forces at the time the decision was made.</strong></summary>
 
-Conway's Law states that software structures mirror the communication paths of the organisation that builds them—three distinct teams naturally produce three corresponding architectural boundaries.
+**Answer:** **Context** (vs Status, Decision, Consequences).
+
+- **Explanation (Key):** Context records the forces; consequences record the results.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 2.7:</strong> Explain the six-step system design process and why "Estimate" comes directly after "Clarify requirements."</summary>
+<summary><strong>Question 2.5: Explain what a team should do when an accepted ADR turns out to be wrong a year later.</strong></summary>
 
-Order: **Clarify → Estimate → API → High-level design → Deep dive → Trade-offs**.
+**Answer:** **Write a new ADR that supersedes the old one** (never edit or delete it).
 
-Estimating QPS and storage right after clarifying requirements tells you the scale constraints before you design APIs or pick storage/architecture.
+- **Explanation (Key):** ADRs are immutable; the history of decisions is valuable.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 2.6: Explain how to estimate average requests per second for a system with 1,000,000 requests per day.</strong></summary>
+
+**Answer:** About **12** requests per second on average.
+
+- **Explanation (Key):** `1,000,000 ÷ 86,400 ≈ 11.6`, so about 12 per second.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 2.7: Explain why we design for the peak rather than the average load.</strong></summary>
+
+**Answer:** **The system must still work when the most users are active, such as at lunch time.**
+
+- **Explanation (Key):** A system sized for the average fails at the peak, when it matters most.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 2.8: Explain the speed ordering between reading from memory (RAM), an in-data-centre round trip, reading 1 MB from an SSD, and a Phnom Penh–Singapore round trip.</strong></summary>
+
+**Answer:** **Reading a value from memory (RAM)** is fastest.
+
+- **Explanation (Key):** Memory `≈ 100 ns`; in-DC round trip `≈ 0.5 ms`; SSD 1 MB `≈ 1 ms`; Phnom Penh–Singapore `≈ 30–50 ms`.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 2.9: Explain why a system with three main parts matching its three teams (mobile, backend and payments) illustrates Conway’s law.</strong></summary>
+
+**Answer:** This is an example of **Conway’s law**.
+
+- **Explanation (Key):** Systems mirror the communication structure of the organisation.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 2.10: Explain what comes directly after “clarify requirements” in the six-step design process.</strong></summary>
+
+**Answer:** **Estimate** comes directly after “clarify requirements”.
+
+- **Explanation (Key):** `Clarify → estimate → API → high-level design → deep dive → trade-offs`.
 
 </details>
 
 ### Practical Questions (Part B)
 
 <details data-tag="practical" data-meta="4 pts">
-<summary><strong>Question 2.8:</strong> A ride-hailing app has 500,000 rides/day. Each ride produces one 1 KB record, and peak is 4× average. Estimate (a) average rides/s, (b) peak rides/s, and (c) storage/year with working and units.</summary>
+<summary><strong>Question 2.11: A ride-hailing app has 500,000 rides per day. Each ride produces one 1 KB record, and the peak is 4× the average. Estimate (a) average rides per second, (b) peak rides per second and (c) storage per year. Show your working and units.</strong></summary>
 
-- **(a) Average:** `500,000 ÷ 86,400 ≈ 5.8 rides/s` (or using 100,000 s/day: `5 rides/s`).
-- **(b) Peak:** `5.8 × 4 ≈ 23 rides/s` (or `20 rides/s`).
-- **(c) Storage/year:** `500,000 × 1 KB = 500 MB/day`; `500 MB/day × 365 ≈ 182.5 GB ≈ 180 GB/year`.
+- **(a) Average:** `500,000 ÷ 86,400 ≈ 5.8 rides/s` (1 pt).
+- **(b) Peak:** `5.8 × 4 ≈ 23 rides/s` (1 pt).
+- **(c) Storage/year:** `500,000 × 1 KB = 500 MB/day`; `× 365 ≈ 180 GB/year` (1 pt).
+- *(Accept 100,000 s/day → `5 /s`, `20 /s`.)*
 
 **Rubric (4 pts):** 1 pt each for (a), (b), (c); 1 pt for units on every result and visible working.
 
 </details>
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 2.9:</strong> List three containers you would draw on a C4 container diagram for a simple online bookshop, with the technology on each and the protocol between two of them.</summary>
+<summary><strong>Question 2.12: List three containers you would draw on a container diagram for a simple online bookshop, with the technology and the protocol between two of them.</strong></summary>
 
-- **Containers + Tech:** (1) Web Front End (`Vue`), (2) Backend API (`NestJS`), (3) Relational Database (`PostgreSQL`) — or Search Engine / Object Storage for book covers.
-- **Protocols:** Front End → Backend API via `HTTPS / JSON`; Backend API → PostgreSQL via `SQL over TCP`.
+- **Containers + Technology:** Web front end in `Vue`, backend API in `NestJS`, `PostgreSQL` database *(also accept search engine, object storage for book covers)*.
+- **Protocols:** `HTTPS/JSON` between front end and API; `SQL over TCP` between API and database.
 
 ```mermaid
 flowchart LR
   U["Customer (Browser)"] -->|"HTTPS"| FE["Web Front End (Vue)"]
-  FE -->|"HTTPS / JSON"| API["Backend API (NestJS)"]
-  API -->|"SQL over TCP"| DB["Relational DB (PostgreSQL)"]
+  FE -->|"HTTPS/JSON"| API["Backend API (NestJS)"]
+  API -->|"SQL over TCP"| DB["Database (PostgreSQL)"]
 ```
 
-**Rubric (3 pts):** 1 pt for 3 sensible containers; 1 pt for technology on each; 1 pt for a correct protocol between two containers.
+**Rubric (3 pts):** 1 pt three sensible containers; 1 pt technology on each; 1 pt correct protocol.
 
 </details>
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 2.10:</strong> Write the Context and Consequences (one good, one bad) of a short ADR: "Use one PostgreSQL database for all FoodHub data."</summary>
+<summary><strong>Question 2.13: Write the Context and Consequences (one good, one bad) of a short ADR: “Use one PostgreSQL database for all FoodHub data.”</strong></summary>
 
-- **Context:** FoodHub is built by one small team (8 devs), needs ACID transactions across orders and payments, and has modest initial scale (~15 GB/year, ~35 QPS peak).
-- **Good Consequence:** Full ACID transactions, simple joins, and only one database to operate and back up.
-- **Bad Consequence:** Single point of failure until replicated, write-scaling limits at much larger scale, and shared schema coupling across modules must be disciplined.
+- **Context:** One team (8 devs), transactions needed between orders and payments, about `15 GB/year`, `35 QPS` peak.
+- **Good consequence:** ACID transactions, one thing to operate and back up, simple joins.
+- **Bad consequence:** Single point of failure until replicated; write scaling limit at much larger scale; all modules share one schema so coupling must be controlled.
 
 **Rubric (3 pts):** 1 pt context with real forces; 1 pt good consequence; 1 pt bad consequence.
 
@@ -419,7 +465,7 @@ flowchart LR
 
 ## Section 3 — Week 3: Networking and Communication
 
-Covers: IP addressing and NAT, TCP and UDP, HTTP/1.1 vs HTTP/2 vs HTTP/3, TLS 1.3, DNS, stateless servers, proxies, and CDNs.
+Covers: IP addressing and NAT, TCP and UDP, HTTP versions, TLS, DNS, client-server styles, proxies and CDNs.
 
 ```mermaid
 sequenceDiagram
@@ -438,100 +484,130 @@ sequenceDiagram
   BE-->>C: "HTML / Response via nginx"
 ```
 
-### Theory & Concept Questions ("Explain…")
+### Theory & Concept Questions (Part A)
 
 <details data-tag="theory">
-<summary><strong>Question 3.1:</strong> Explain why <code>192.168.1.20</code> is a private IPv4 address while <code>8.8.8.8</code>, <code>203.0.113.10</code>, and <code>1.1.1.1</code> are public.</summary>
+<summary><strong>Question 3.1: Explain why 192.168.1.20 is a private IPv4 address while 8.8.8.8, 203.0.113.10, and 1.1.1.1 are public.</strong></summary>
 
-`192.168.0.0/16` is one of the three RFC 1918 reserved private IPv4 ranges (`10.0.0.0/8`, `172.16.0.0/12` i.e. `172.16–31.x`, and `192.168.0.0/16`) used inside local networks (requiring NAT to reach the internet), whereas the others are globally routable public addresses.
+**Answer:** `192.168.1.20` is a private IPv4 address.
+
+- **Explanation (Key):** `192.168.0.0/16` is a private range; the others are public.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 3.2:</strong> Explain how UDP differs from TCP in connection setup, delivery guarantees, and ordering.</summary>
+<summary><strong>Question 3.2: Explain how UDP handles connection setup, delivery guarantees, and ordering compared with TCP.</strong></summary>
 
-**UDP** sends packets without a connection (no 3-way `SYN → SYN-ACK → ACK` handshake) and provides best-effort delivery with no automatic retransmission or ordering guarantees. Reliability and ordering are **TCP's** job.
+**Answer:** UDP **sends packets without a connection and does not guarantee delivery or order**.
 
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 3.3:</strong> Explain how HTTP/2 improves on HTTP/1.1, and how HTTP/3 changes the underlying transport.</summary>
-
-**HTTP/2** introduces **multiplexing** and **HPACK** header compression so many requests and responses share one TCP connection simultaneously without changing HTTP semantics.
-
-**HTTP/3** runs on top of **QUIC (which uses UDP)**, providing built-in reliability and TLS 1.3 while avoiding TCP head-of-line blocking.
+- **Explanation (Key):** UDP is connectionless and best effort; reliability is TCP's job.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 3.4:</strong> Explain the main role of the server's certificate in TLS 1.3, as distinct from session key creation.</summary>
+<summary><strong>Question 3.3: Explain the main improvement of HTTP/2 over HTTP/1.1.</strong></summary>
 
-The server's certificate **proves the server's identity** (authentication), whereas ephemeral key agreement (**ECDHE**) creates the symmetric session keys used to encrypt traffic.
+**Answer:** **Many requests can share one connection at the same time (multiplexing).**
 
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 3.5:</strong> Explain what a DNS TTL of 3,600 means and what a CNAME record is used for.</summary>
-
-- **TTL = 3,600:** Cache lifetime in seconds—DNS resolvers may cache the record for up to 1 hour (3,600 s) before querying again.
-- **A vs CNAME record:** An **`A` record** maps a domain name directly to an IPv4 address (`foodhub.com.kh → 203.0.113.5`), whereas a **`CNAME` record** maps one domain name to another domain name (for example, pointing a subdomain to a CDN host).
+- **Explanation (Key):** Multiplexing over one connection; HTTP semantics are unchanged.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 3.6:</strong> Explain the difference between a reverse proxy (like nginx in front of FoodHub's API) and a forward proxy.</summary>
+<summary><strong>Question 3.4: Explain what HTTP/3 runs on top of and how it improves on TCP.</strong></summary>
 
-A **reverse proxy** acts on behalf of the servers (handling TLS termination, routing, and forwarding requests to backend instances), while a **forward proxy** acts on behalf of clients (e.g., filtering employee browsing or hiding a user's IP).
+**Answer:** HTTP/3 runs on top of **QUIC, which uses UDP**.
 
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 3.7:</strong> Explain why a stateless server is easier to scale than a stateful server.</summary>
-
-Because a stateless server holds no per-client session memory locally, **any copy of the server can answer any request**, letting you add more copies behind a load balancer horizontally.
+- **Explanation (Key):** QUIC is a transport built on UDP with its own reliability and built-in TLS.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 3.8:</strong> Explain why restaurant menu photos fit a CDN whereas current order status, payment confirmations, or admin dashboards do not.</summary>
+<summary><strong>Question 3.5: Explain what the server’s certificate is mainly used for in TLS 1.3, as distinct from session key creation.</strong></summary>
 
-Menu photos are **public, large, and rarely changing**, making them ideal for edge caching. Order status, payment confirmations, and admin pages are private/personalised or change frequently.
+**Answer:** **Proving the server's identity.**
+
+- **Explanation (Key):** Key agreement (ECDHE) creates the session key; the certificate proves identity.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 3.6: Explain what a DNS record TTL of 3,600 means.</strong></summary>
+
+**Answer:** **Resolvers may cache the answer for up to one hour.**
+
+- **Explanation (Key):** TTL is the cache lifetime in seconds.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 3.7: Explain what a CNAME record is used for (versus A, MX, and TXT).</strong></summary>
+
+**Answer:** **CNAME** points one name to another name, for example to a CDN host.
+
+- **Explanation (Key):** CNAME maps a name to another name.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 3.8: Explain why nginx in front of FoodHub’s API servers is a reverse proxy (versus a forward proxy).</strong></summary>
+
+**Answer:** **nginx in front of FoodHub's API servers, handling TLS and forwarding requests**, is a reverse proxy.
+
+- **Explanation (Key):** A reverse proxy works for the servers; a company proxy filtering employee browsing or a browser extension hiding your IP are forward proxies.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 3.9: Explain why a stateless server is easier to scale.</strong></summary>
+
+**Answer:** **Any copy of the server can answer any request, so more copies can be added behind a load balancer.**
+
+- **Explanation (Key):** No per-client memory on the server, so requests can go to any instance.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 3.10: Explain why restaurant menu photos are the best fit for a CDN (versus current order status, payment confirmations, or the admin dashboard).</strong></summary>
+
+**Answer:** **Restaurant menu photos** fit a CDN best.
+
+- **Explanation (Key):** Public, large and rarely changing. Order status, payment confirmations, and admin dashboards are personal or changing.
 
 </details>
 
 ### Practical Questions (Part B)
 
 <details data-tag="practical" data-meta="4 pts">
-<summary><strong>Question 3.9:</strong> List, in order, the four main steps between a customer typing <code>foodhub.com.kh</code> and receiving the HTML. Name the protocol for each step.</summary>
+<summary><strong>Question 3.11: List, in order, the four main steps between a customer typing foodhub.com.kh and receiving the HTML. For each step, name the protocol.</strong></summary>
 
-1. **DNS lookup** of `foodhub.com.kh` to obtain its IP address (**DNS**, usually UDP port 53).
-2. **Open transport connection** to the IP on port 443 (**TCP** 3-way `SYN → SYN-ACK → ACK` handshake, or **QUIC over UDP** for HTTP/3).
-3. **TLS handshake** for ECDHE key agreement and certificate verification (**TLS 1.3**).
-4. **Send HTTP request and receive HTML** (**HTTP/1.1, HTTP/2, or HTTP/3**).
+1. **DNS lookup** of the name to get an IP (**DNS**, usually UDP port 53).
+2. **Open a connection** to the IP on port 443 (**TCP**, or **QUIC over UDP** for HTTP/3).
+3. **TLS handshake**: key agreement and certificate check (**TLS 1.3**).
+4. **Send the HTTP request** and receive the HTML (**HTTP/1.1, HTTP/2 or HTTP/3**).
 
-**Rubric (4 pts):** 1 pt per step in correct order with protocol named.
-
-</details>
-
-<details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 3.10:</strong> FoodHub will move its API to a new server next week, and its DNS record currently has TTL = 86,400 seconds. Explain the problem this causes and the exact procedure the team should follow before/during/after the move.</summary>
-
-**Problem:** Resolvers and client devices may cache the old IP for up to 24 hours (86,400 s), so users will keep hitting the old server after cutover.
-
-**Procedure:** Lower the TTL (e.g., to 300 s) **at least one full old TTL (1 day) before** the move; keep the old server running (or forwarding) until the old TTL expires; raise the TTL again once traffic has shifted cleanly.
-
-**Rubric (3 pts):** 1 pt stale cache up to 24h; 1 pt lower TTL at least 1 TTL ahead; 1 pt keep old server running/forwarding then raise TTL afterward.
+**Rubric (4 pts):** 1 point per step.
 
 </details>
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 3.11:</strong> A backend behind nginx logs every request as coming from <code>172.18.0.3</code>. Explain why, how the backend can learn the real client IP, and the security risk of that mechanism.</summary>
+<summary><strong>Question 3.12: FoodHub will move its API to a new server next week. Its DNS record has a TTL of 86,400 seconds. What problem could this cause, and what should the team do before the move?</strong></summary>
 
-- **Why:** The TCP connection to the backend originates from the reverse proxy (`172.18.0.3`), so the backend sees the proxy's IP.
-- **Fix:** The proxy attaches `X-Forwarded-For` (or `X-Real-IP` / `Forwarded`) with the client IP, and the backend reads that header.
-- **Security risk:** Clients can forge HTTP headers to spoof their IP and bypass IP bans or rate limits, so the backend must **only trust the header when the request comes from its own proxy** (and the proxy must overwrite, not blindly append, untrusted incoming values).
+- **Problem:** Resolvers and devices may keep the old IP for up to 24 hours, so some users still reach the old server.
+- **Procedure:** Lower the TTL (e.g., to 300 s) at least one TTL (a day) before the move; keep the old server running (or forwarding) until the old TTL has passed; raise the TTL again afterwards.
 
-**Rubric (3 pts):** 1 pt proxy TCP IP; 1 pt forwarded header; 1 pt spoofing risk + trusting only own proxy / overwriting untrusted values.
+**Rubric (3 pts):** 1 pt stale cache up to 24 h; 1 pt lower TTL at least one TTL ahead; 1 pt keep old server running/forwarding then raise TTL.
+
+</details>
+
+<details data-tag="practical" data-meta="3 pts">
+<summary><strong>Question 3.13: A backend behind nginx logs every request as coming from 172.18.0.3. Why? How can the backend learn the real client IP, and what is the security risk of that method?</strong></summary>
+
+- **Why:** The TCP connection to the backend comes from the proxy, so the backend sees the proxy's IP.
+- **How:** The proxy adds `X-Forwarded-For` (or `X-Real-IP` / `Forwarded`) with the client IP, and the backend reads it.
+- **Security risk:** The header can be forged by clients, so the backend must only trust it when the request comes from its own proxy (and the proxy must overwrite, not append, untrusted values).
+
+**Rubric (3 pts):** 1 pt proxy TCP connection; 1 pt forwarded header; 1 pt spoofing risk + trust own proxy / overwrite untrusted values.
 
 </details>
 
@@ -539,7 +615,7 @@ Menu photos are **public, large, and rarely changing**, making them ideal for ed
 
 ## Section 4 — Week 4: Web Concepts and API Design
 
-Covers: sessions and tokens, cookie flags, JWT, API styles, REST design, API gateways, idempotency, serialization, and CORS.
+Covers: sessions and tokens, cookie flags, JWT, API styles, REST design, API gateways, serialization and CORS.
 
 ```mermaid
 sequenceDiagram
@@ -555,105 +631,136 @@ sequenceDiagram
   API-->>App: "200 OK (Stored Order #42, NO duplicate order/charge)"
 ```
 
-### Theory & Concept Questions ("Explain…")
+### Theory & Concept Questions (Part A)
 
 <details data-tag="theory">
-<summary><strong>Question 4.1:</strong> Explain how the <code>HttpOnly</code> cookie flag limits XSS damage compared with <code>Secure</code>, <code>SameSite</code>, or <code>Max-Age</code>.</summary>
+<summary><strong>Question 4.1: Explain which cookie flag stops JavaScript on the page from reading the session cookie.</strong></summary>
 
-`HttpOnly` prevents browser JavaScript from reading the cookie via `document.cookie`, so an XSS script cannot exfiltrate the session token directly. By contrast, `Secure` sends cookies only over HTTPS, and `SameSite` controls cross-site sending (`Strict`/`Lax` block most CSRF; `None` sends cross-site and requires `Secure`).
+**Answer:** **HttpOnly** (vs Secure, SameSite, Max-Age).
+
+- **Explanation (Key):** `HttpOnly` hides the cookie from `document.cookie`, limiting XSS damage.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 4.2:</strong> Explain the main weakness of a self-contained JWT compared with a server-side session, why you must never put secrets in a JWT payload, and how to mitigate revocation.</summary>
+<summary><strong>Question 4.2: Explain the main weakness of a self-contained JWT compared with a server-side session.</strong></summary>
 
-- **Revocation weakness:** Any service validating the signature will accept a JWT until it expires, making immediate revocation hard. Mitigate with **short TTL + refresh tokens** or a revocation list.
-- **Payload visibility:** A JWT has three Base64URL parts (`Header.Payload.Signature`) and is **signed (integrity), not encrypted (confidentiality)**—anyone can decode and read the payload, so never store secrets inside it.
+**Answer:** **It is hard to revoke before it expires.**
 
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 4.3:</strong> Explain why creating an order uses <code>POST /v1/orders → 201</code> and invalid input like <code>{"restaurantId": "abc"}</code> returns <code>400</code>.</summary>
-
-REST creates a resource by sending `POST` to the noun collection (`/v1/orders`) and returns `201 Created` (not an RPC verb like `/createOrder`).
-
-Type/validation errors are client errors (`400 Bad Request`), not server crashes (`500`) or missing routes (`404`).
+- **Explanation (Key):** Any server accepts it until expiry; fix with short TTL + refresh tokens or a revocation list.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 4.4:</strong> Explain why <code>POST</code> is not idempotent by default whereas <code>GET</code>, <code>PUT</code>, and <code>DELETE</code> are.</summary>
+<summary><strong>Question 4.3: Explain why a JWT payload is not confidential even though it is signed.</strong></summary>
 
-Repeating `GET`, `PUT` (full replace), or `DELETE` leaves the server in the same state after the first call, whereas `PATCH` (partial update) is not necessarily idempotent and repeating a `POST` creates another new resource each time unless guarded by an idempotency key.
+**Answer:** A JWT payload is **signed, so it cannot be changed without detection, but anyone can read it**.
 
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 4.5:</strong> Explain why a webhook fits immediate payment-provider notifications better than polling.</summary>
-
-With a **webhook**, the payment provider pushes an HTTP `POST` to FoodHub the moment payment succeeds, avoiding wasted polling requests and polling delay.
+- **Explanation (Key):** Signed (integrity), not encrypted (confidentiality). Never put secrets in it.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 4.6:</strong> Explain what belongs in an API gateway (routing, rate limiting, token checks) and why calculating a delivery fee does not.</summary>
+<summary><strong>Question 4.4: Explain the correct HTTP request and success status code when a client creates a new order.</strong></summary>
 
-API gateways handle cross-cutting edge concerns (routing, rate limiting, access token validation). Domain/business rules such as delivery fee calculation belong inside the backend services.
+**Answer:** **`POST /v1/orders → 201`**.
 
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 4.7:</strong> Explain what CORS protects, who enforces it, and why it does not stop attackers using <code>curl</code>.</summary>
-
-CORS is **enforced by web browsers**, which only pass a cross-origin response to page JavaScript if the server explicitly allows that origin. It protects users' browsers—not the API itself—so non-browser clients like `curl` ignore CORS.
+- **Explanation (Key):** Create = `POST` to the collection; `201 Created`.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 4.8:</strong> Explain why Protobuf and Avro are well-suited for long-lived event data compared with plain JSON.</summary>
+<summary><strong>Question 4.5: Explain which status code fits when the client sends {"restaurantId": "abc"} where a number is required.</strong></summary>
 
-Both Protobuf and Avro use typed schemas built for **schema evolution**, allowing fields to be added safely without breaking older event readers, while also being more compact than JSON.
+**Answer:** **`400`** (Bad Request).
+
+- **Explanation (Key):** Invalid input is a client error.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 4.6: Explain why POST is not idempotent whereas GET, PUT, and DELETE are.</strong></summary>
+
+**Answer:** **POST** is not idempotent.
+
+- **Explanation (Key):** Repeating `POST` creates another resource, unless an idempotency key is used.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 4.7: Explain why a webhook fits best when a payment provider must tell FoodHub the moment a payment succeeds.</strong></summary>
+
+**Answer:** **A webhook: the provider sends an HTTP POST to FoodHub.**
+
+- **Explanation (Key):** The provider pushes the event; polling wastes requests and adds delay.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 4.8: Explain which tasks belong in an API gateway and why calculating the delivery fee for an order does not.</strong></summary>
+
+**Answer:** **Calculating the delivery fee for an order** does not belong in an API gateway (routing, rate limiting, and checking the access token do).
+
+- **Explanation (Key):** Business rules belong in services, not the gateway.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 4.9: Explain how CORS works, who enforces it, and why it does not stop attackers using curl.</strong></summary>
+
+**Answer:** **It is enforced by browsers, which only give a cross-origin response to the page if the server allows that origin.**
+
+- **Explanation (Key):** CORS protects users' browsers, not the API.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 4.10: Explain why Protobuf and Avro are good for long-lived event data.</strong></summary>
+
+**Answer:** **They support schema evolution, so fields can be added without breaking old readers.**
+
+- **Explanation (Key):** Both were designed for schema evolution with typed schemas.
 
 </details>
 
 ### Practical Questions (Part B)
 
 <details data-tag="practical" data-meta="4 pts">
-<summary><strong>Question 4.9:</strong> Design three REST endpoints for FoodHub restaurant reviews (list reviews, add review, delete your own review). Give method, path, success code, and one error code for each.</summary>
+<summary><strong>Question 4.11: Design three REST endpoints for FoodHub restaurant reviews (list a restaurant’s reviews, add a review, delete your own review). For each give the method, path, success code and one error code.</strong></summary>
 
-1. **List:** `GET /v1/restaurants/{id}/reviews?limit=20&offset=0` → `200` (Error: `404` unknown restaurant).
-2. **Add:** `POST /v1/restaurants/{id}/reviews` → `201` (Errors: `400` invalid rating, `401` not logged in, `409` already reviewed).
-3. **Delete own:** `DELETE /v1/reviews/{reviewId}` → `204` (Errors: `403` or `404` not author, `404` missing).
+- **List:** `GET /v1/restaurants/{id}/reviews?limit=20&offset=0 → 200` (`404` unknown restaurant).
+- **Add:** `POST /v1/restaurants/{id}/reviews → 201` (`400` invalid rating, `401` not logged in, `409` already reviewed).
+- **Delete own:** `DELETE /v1/reviews/{reviewId} → 204` (`403` or `404` not the author, `404` missing).
 
 **Rubric (4 pts):** 1 pt per correct endpoint (method + noun path + success code); 1 pt for sensible error codes and pagination.
 
 </details>
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 4.10:</strong> A customer taps "Order" on a slow network; the order is created, the response is lost, and the app retries. Explain what fails without protection and how an idempotency key solves it.</summary>
+<summary><strong>Question 4.12: A customer taps “Order” on a slow network. The order is created but the response never arrives, and the app retries. What goes wrong without protection, and how does an idempotency key fix it?</strong></summary>
 
-- **Without protection:** The retried `POST` creates a second duplicate order (and may charge the customer twice).
-- **Idempotency key fix:** The client generates a unique key per order attempt, sends it in an `Idempotency-Key` header, and reuses the same key on retries. The server stores `key → result`; when it sees a repeated key, it returns the stored result (e.g., `200` with the original order) instead of creating a new one.
+- **Without protection:** The retry creates a second order (and may charge twice).
+- **Idempotency key:** The client generates a unique key per order attempt and sends it in an `Idempotency-Key` header, reusing it on retries. The server stores `key → result`; a repeated key returns the stored result (e.g., `200` with the same order) instead of creating a new one.
 
-**Rubric (3 pts):** 1 pt duplicate order/charge; 1 pt client unique key reused across retries; 1 pt server stores key → result and returns stored response.
+**Rubric (3 pts):** 1 pt duplicate order/charge; 1 pt client unique key reused on retries; 1 pt server stores key → result and returns stored response.
 
 </details>
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 4.11:</strong> A Vue app on <code>http://localhost:5173</code> calls an API on <code>http://localhost:3000</code> and gets "blocked by CORS policy," while <code>curl</code> succeeds. Explain why and give the server fix.</summary>
+<summary><strong>Question 4.13: A Vue app on http://localhost:5173 calls an API on http://localhost:3000 and gets “blocked by CORS policy”, but the same request works with curl. Explain why, and give the fix on the server.</strong></summary>
 
-- **Why:** `Origin = Protocol + Domain + Port`, so `5173` vs `3000` are different origins, triggering the browser's Same-Origin Policy; `curl` ignores CORS because only browsers enforce it.
-- **Server Fix:** Return `Access-Control-Allow-Origin: http://localhost:5173` (in NestJS: `app.enableCors({ origin: 'http://localhost:5173', credentials: true })`), and never use `*` when cookies/credentials are sent.
+- **Why:** The origins differ (port `5173` vs `3000`), so the same-origin policy applies. CORS is enforced by the browser only; `curl` ignores it.
+- **Server fix:** Return `Access-Control-Allow-Origin: http://localhost:5173` (in NestJS: `app.enableCors({ origin: 'http://localhost:5173', credentials: true })`), not `*` when cookies are used.
 
-**Rubric (3 pts):** 1 pt different origins (port); 1 pt browser-only enforcement vs curl; 1 pt explicit allow-origin header / NestJS config without `*` for credentials.
+**Rubric (3 pts):** 1 pt different origins (port); 1 pt browser-only vs curl; 1 pt explicit allow-origin header / NestJS config without `*` for credentials.
 
 </details>
 
 ---
 
-## Section 5 — Week 5: Monolith, Layered, and Modular Styles
+## Section 5 — Week 5: Monolith, Layered and Modular Styles
 
-Covers: monolith, layered and N-tier, modular monolith, hexagonal architecture, pipe-and-filter, microkernel, and breaking dependency cycles.
+Covers: monolith, layered and N-tier, modular monolith, hexagonal architecture, pipe-and-filter, microkernel and SOA.
 
 ```mermaid
 flowchart LR
@@ -663,98 +770,127 @@ flowchart LR
   MOD["ordering.module.ts: useClass binding"] -.->|"wires"| ADPT
 ```
 
-### Theory & Concept Questions ("Explain…")
+### Theory & Concept Questions (Part A)
 
 <details data-tag="theory">
-<summary><strong>Question 5.1:</strong> Explain the real architectural strengths of a monolith (and why independent scaling or team deploy independence are not among them).</summary>
+<summary><strong>Question 5.1: Explain what is a real strength of a monolith (and why independent scaling or deploy independence are not).</strong></summary>
 
-Calls between parts are fast, reliable **in-process function calls**, and a **single database makes ACID transactions simple**. Independent scaling and independent team deployments belong to microservices, and a monolith can still become tangled without discipline.
+**Answer:** **Calls between parts are in-process function calls, and one database makes transactions simple.**
+
+- **Explanation (Key):** In-process calls and one database are simple and fast. Scaling features separately and independent team deploys are microservice strengths, and a monolith can still become tangled.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 5.2:</strong> Explain the strict layered architecture call rule and why a Vue app + NestJS API + PostgreSQL DB is a 3-tier system.</summary>
+<summary><strong>Question 5.2: Explain what the presentation layer may call in a strict layered architecture.</strong></summary>
 
-- **Strict vs Open Layering:** In **strict layering**, each logical layer (e.g., presentation) may call **only the layer directly below it** (never skipping down to the database directly), whereas **open layering** allows a layer to bypass lower layers to call any layer beneath it.
-- **3-tier:** Client (Vue), application server (NestJS), and database (PostgreSQL) are three separately running physical processes/tiers.
+**Answer:** **Only the layer directly below it.**
 
-```mermaid
-flowchart LR
-  subgraph ST["Strict Layering (Call N-1 Only)"]
-    SP["Presentation"] --> SB["Business"] --> SD["Data Access"]
-  end
-
-  subgraph OP["Open Layering (May Bypass Layers)"]
-    OP1["Presentation"] --> OB["Business"] --> OD["Data Access"]
-    OP1 -.->|"Bypass"| OD
-  end
-```
+- **Explanation (Key):** Strict layering: only the next layer down.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 5.3:</strong> Explain what a modular monolith is, and how NestJS's <code>CatalogModule</code> stops other modules from touching its repository.</summary>
+<summary><strong>Question 5.3: Explain why a Vue app, a NestJS API and a PostgreSQL database running separately form a 3-tier system.</strong></summary>
 
-A **modular monolith** is a single deployable split into modules by business capability, where each module owns its own data and exposes only a public interface.
+**Answer:** **A 3-tier system.**
 
-In NestJS, listing only `CatalogService` in `exports` enforces this boundary because only exported providers are visible to importing modules.
-
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 5.4:</strong> Explain which way dependencies point in Hexagonal Architecture and why <code>OrderRepository</code> is a "port" rather than an adapter.</summary>
-
-Dependencies always point **inwards from adapters to the core**.
-
-**Driving (incoming) ports** define how the core is triggered (e.g., `CreateOrderUseCase` called by `OrdersController`). `OrderRepository` is an interface defined/used by the ordering core—so it is an outgoing (**driven**) **port**, while `PostgresOrderRepository` is the driven **adapter** implementing it.
+- **Explanation (Key):** Client, application server, database: three separately running tiers.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 5.5:</strong> Explain why "scan → resize → compress → store" is Pipe-and-Filter whereas an extensible editor with plugins is Microkernel.</summary>
+<summary><strong>Question 5.4: Explain the main idea of a modular monolith.</strong></summary>
 
-- **Pipe-and-filter** chains independent transformation steps in a sequential data pipeline.
-- **Microkernel (plug-in)** pairs a minimal core with independently written extensions (such as VS Code or browsers).
+**Answer:** **One deployable split into modules by business area, each owning its data and exposing a public interface.**
+
+- **Explanation (Key):** Modules by business capability with owned data and public interfaces, in one deployment.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 5.6:</strong> Explain why cyclic calls between Ordering and Payment are an architectural smell and how to fix them.</summary>
+<summary><strong>Question 5.5: Explain how CatalogModule in a NestJS modular monolith stops other modules from using its repository.</strong></summary>
 
-Dependency cycles indicate the module boundary is wrong. Break the cycle by introducing an **asynchronous event**, moving the shared responsibility, or merging them into one module.
+**Answer:** **By listing only CatalogService in exports.**
+
+- **Explanation (Key):** Only exported providers are visible to importing modules.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 5.6: Explain which way dependencies point in hexagonal architecture.</strong></summary>
+
+**Answer:** **From adapters inwards to the core.**
+
+- **Explanation (Key):** Adapters depend on the core; the core defines ports.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 5.7: Explain why OrderRepository (an interface used by the ordering logic) is a port in hexagonal architecture.</strong></summary>
+
+**Answer:** It is a **Port**.
+
+- **Explanation (Key):** An interface the core needs is an outgoing (driven) port; the PostgreSQL class is the adapter.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 5.8: Explain why processing an uploaded photo through scan → resize → compress → store is pipe-and-filter.</strong></summary>
+
+**Answer:** **Pipe-and-filter.**
+
+- **Explanation (Key):** Independent steps connected in a pipeline.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 5.9: Explain why an editor where a small core is extended by many independently written extensions follows the microkernel (plug-in) style.</strong></summary>
+
+**Answer:** **Microkernel (plug-in).**
+
+- **Explanation (Key):** Small core + plug-ins (VS Code, browsers).
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 5.10: Explain what to do when ordering calls payment and payment calls ordering.</strong></summary>
+
+**Answer:** **Break the cycle, for example with an event or by moving the responsibility, or treat them as one module.**
+
+- **Explanation (Key):** Cycles mean the boundary is wrong; break them or merge.
 
 </details>
 
 ### Practical Questions (Part B)
 
 <details data-tag="practical" data-meta="4 pts">
-<summary><strong>Question 5.7:</strong> Explain the difference between a logical layer and a physical tier. Give one FoodHub example of each.</summary>
+<summary><strong>Question 5.11: Explain the difference between a logical layer and a physical tier. Give one FoodHub example of each.</strong></summary>
 
 - **Logical layer:** A way of organising code by responsibility inside one program (FoodHub example: controllers / services / repositories inside the NestJS API).
-- **Physical tier:** A separately running process, often on its own machine (FoodHub example: customer app, NestJS API server, PostgreSQL database server).
+- **Physical tier:** A separately running part, often on its own machine (FoodHub example: customer app, API server, PostgreSQL server).
 
-**Rubric (4 pts):** 1 pt layer definition; 1 pt tier definition; 1 pt FoodHub layer example; 1 pt FoodHub tier example.
-
-</details>
-
-<details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 5.8:</strong> FoodHub moves order storage from in-memory to PostgreSQL in Week 10. Explain how a port and adapter keep this change small, and name which file(s) change.</summary>
-
-Because the ordering core depends only on the `OrderRepository` interface (port) and not on an in-memory `Map` or SQL, you write a new `PostgresOrderRepository` adapter implementing that same interface.
-
-**Files changed:** Only the new adapter file and the single `useClass` binding line in `ordering.module.ts` change; `OrdersService` and controllers remain untouched.
-
-**Rubric (3 pts):** 1 pt core depends only on port interface; 1 pt new Postgres adapter implements interface; 1 pt only new adapter + one `useClass` line in `ordering.module.ts` change.
+**Rubric (4 pts):** 1 pt layer definition; 1 pt tier definition; 1 pt layer example; 1 pt tier example.
 
 </details>
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 5.9:</strong> A startup with 4 developers is building an online clinic booking system. Recommend an architectural style from Week 5 and justify it with two reasons tied to their context.</summary>
+<summary><strong>Question 5.12: FoodHub will move order storage from memory to PostgreSQL in week 10. Explain how a port and adapter make this change small. Which file(s) change?</strong></summary>
 
-- **Recommendation:** **Modular monolith** (or a simple layered monolith).
-- **Context reasons:** (1) Small 4-person team—one codebase and one deployment are easiest to operate and fast to refactor while early requirements evolve; (2) Booking and payment need ACID transactions in one database at modest load, while clean modules allow a later split if needed.
+- **How:** The ordering logic depends only on the `OrderRepository` interface (port), not on a `Map` or SQL. A new `PostgresOrderRepository` adapter implements the same interface.
+- **Files changed:** Only the new adapter file and the one `useClass` line in `ordering.module.ts` change; `OrdersService` and controllers stay the same.
 
-**Rubric (3 pts):** 1 pt sensible style (modular/layered monolith; microservices earns at most 1 pt unless costs are explicitly weighed); 1 pt each for two context-based reasons.
+**Rubric (3 pts):** 1 pt core depends only on port; 1 pt Postgres adapter implements interface; 1 pt only new adapter + one `useClass` line change.
+
+</details>
+
+<details data-tag="practical" data-meta="3 pts">
+<summary><strong>Question 5.13: A startup with 4 developers is building an online clinic booking system. Recommend a style from this week and justify it with two reasons tied to their context.</strong></summary>
+
+- **Recommendation:** **Modular monolith**, or a simple layered monolith.
+- **Context reasons:** Small team (one codebase and one deployment are easiest to run); early product with unclear requirements (easy to refactor); modest load; booking and payment need transactions (one database); clean modules allow a later split. *(Choosing microservices earns at most 1 pt unless costs are clearly weighed.)*
+
+**Rubric (3 pts):** 1 pt sensible style; 1 pt each for two context-based reasons.
 
 </details>
 
@@ -762,7 +898,7 @@ Because the ordering core depends only on the `OrderRepository` interface (port)
 
 ## Section 6 — Week 6: Microservices and Domain-Driven Design
 
-Covers: microservice properties, distributed monolith, benefits & costs, DDD bounded contexts & subdomains, context maps (ACL), sync vs async, database per service, serverless, and decision framework.
+Covers: microservice characteristics, benefits and costs, DDD, bounded contexts, context maps, sync vs async, database per service, serverless and the decision framework.
 
 ```mermaid
 flowchart LR
@@ -782,93 +918,130 @@ flowchart LR
   end
 ```
 
-### Theory & Concept Questions ("Explain…")
+### Theory & Concept Questions (Part A)
 
 <details data-tag="theory">
-<summary><strong>Question 6.1:</strong> Explain the two defining properties of microservices, and why ten services that share one database and deploy together form a "distributed monolith."</summary>
+<summary><strong>Question 6.1: Explain which properties are essential for microservices (vs language choice, line count, or shared DB).</strong></summary>
 
-Microservices are defined by **independent deployability** and **data ownership** (not service line count or using different languages).
+**Answer:** **Each service can be deployed independently and owns its data.**
 
-If ten services share a database and must deploy together, you get a **distributed monolith**: all the network/operational costs of distribution with none of the independence.
+- **Explanation (Key):** Independent deployment and data ownership are the defining properties.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 6.2:</strong> Explain why microservices lose cross-service ACID transactions and must accept eventual consistency.</summary>
+<summary><strong>Question 6.2: Explain what ten services that must always be deployed together and share one database are called.</strong></summary>
 
-Because each microservice owns its own separate database, a single local database transaction cannot span multiple services; data updates across services propagate asynchronously and become **eventually consistent**.
+**Answer:** **A distributed monolith.**
 
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 6.3:</strong> Explain what a DDD Bounded Context is, and why sending SMS notifications is a Generic Subdomain for FoodHub rather than Core.</summary>
-
-A **bounded context** is an explicit boundary within which a domain model and its vocabulary (ubiquitous language) have one consistent meaning.
-
-SMS delivery is a **generic subdomain** because every company needs it and it gives FoodHub no competitive edge (buy/integrate it), unlike rider matching, delivery ETA prediction, or restaurant ranking (core).
+- **Explanation (Key):** All the costs of distribution with none of the independence.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 6.4:</strong> Explain why translating a bank's payment status codes inside a single FoodHub adapter is an Anti-Corruption Layer (ACL).</summary>
+<summary><strong>Question 6.3: Explain why losing ACID transactions across services and eventual consistency is a cost of microservices.</strong></summary>
 
-An **ACL** acts as a translator boundary that protects FoodHub's internal domain model and vocabulary from leaking or being distorted by an external system's model.
+**Answer:** **No ACID transactions across services; data becomes eventually consistent.**
 
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 6.5:</strong> Explain why calling three 99.9%-available services sequentially drops the overall chain availability to ~99.7%.</summary>
-
-Serial dependencies multiply: `0.999 × 0.999 × 0.999 = 0.999³ ≈ 0.997 (99.7%)`. Any one of the three failing breaks the request.
+- **Explanation (Key):** Independent deploys, scaling only busy parts, and smaller codebases are benefits; cross-service eventual consistency is a cost.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 6.6:</strong> Explain why publishing an asynchronous <code>OrderPlaced</code> event fits notifying kitchen, notification, and analytics better than sequential synchronous REST calls.</summary>
+<summary><strong>Question 6.4: Explain what a bounded context is in DDD.</strong></summary>
 
-One event can fan out to many independent consumers via pub/sub without Ordering knowing about them or blocking on each service's availability and latency.
+**Answer:** **A boundary within which a model and its words have one clear meaning.**
+
+- **Explanation (Key):** Inside the boundary, words and models are consistent.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 6.7:</strong> Explain why resizing uploaded menu photos fits serverless functions, and why a 2-developer startup with weekly-changing ideas should start with a monolith.</summary>
+<summary><strong>Question 6.5: Explain why sending SMS notifications is a generic subdomain for FoodHub (vs matching riders, ETA prediction, or ranking).</strong></summary>
 
-**Serverless** shines on event-triggered, short-lived, spiky workloads like resizing a photo on upload (unlike steady high-connection APIs, 10-hour jobs, or databases).
+**Answer:** **Sending SMS notifications** is a generic subdomain.
 
-A **2-developer startup** with rapidly changing domain boundaries needs simplicity and fast refactoring—30 microservices on Kubernetes would overwhelm them.
+- **Explanation (Key):** Everyone needs SMS; buy it. Matching riders, delivery time prediction, and restaurant ranking could be core.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 6.6: Explain why translating the bank’s payment status codes into FoodHub’s own statuses in one adapter is an anti-corruption layer.</strong></summary>
+
+**Answer:** **An anti-corruption layer.**
+
+- **Explanation (Key):** A translator protecting our model from an external one.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 6.7: Explain what the chain’s availability is when three services, each 99.9% available, are called one after another for every request.</strong></summary>
+
+**Answer:** About **99.7%**.
+
+- **Explanation (Key):** `0.999³ ≈ 0.997`.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 6.8: Explain which communication suits “an order was placed; kitchen, notification and analytics should react”.</strong></summary>
+
+**Answer:** **Publishing an asynchronous OrderPlaced event.**
+
+- **Explanation (Key):** One event, many independent consumers (pub/sub, week 7).
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 6.9: Explain why resizing a menu photo whenever a restaurant uploads one fits serverless functions best.</strong></summary>
+
+**Answer:** **Resizing a menu photo whenever a restaurant uploads one** fits serverless best (vs steady high-traffic APIs, 10-hour encoders, or databases).
+
+- **Explanation (Key):** Event-triggered, short and spiky.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 6.10: Explain the best starting style for a company with 2 developers and an idea that is still changing every week.</strong></summary>
+
+**Answer:** **A simple or modular monolith.**
+
+- **Explanation (Key):** Small team, changing domain: keep it simple.
 
 </details>
 
 ### Practical Questions (Part B)
 
 <details data-tag="practical" data-meta="4 pts">
-<summary><strong>Question 6.8:</strong> Give two benefits and two costs of microservices. For each cost, name one technique or tool that reduces it.</summary>
+<summary><strong>Question 6.11: Give two benefits and two costs of microservices. For each cost, name one technique or tool that reduces it.</strong></summary>
 
-- **Benefits:** Independent deployments, independent scaling (plus fault isolation, tech choice, team autonomy).
-- **Cost 1 — Network failures / cascading latency:** Mitigate with *timeouts, retries with exponential backoff, and circuit breakers* (e.g., Resilience4j).
-- **Cost 2 — Cross-service data consistency:** Mitigate with *sagas and transactional outbox*. *(Other valid pairs: Operations → CI/CD, containers, Kubernetes; Debugging → distributed tracing, central logging; Testing → contract tests.)*
+- **Benefits:** Independent deploys, independent scaling (plus fault isolation, technology choice, team autonomy).
+- **Costs + Mitigations:**
+  - *Network failures* → timeouts, retries, circuit breakers.
+  - *Data consistency* → sagas, outbox.
+  - *(Other valid pairs: Operations → CI/CD, containers, Kubernetes; Debugging → distributed tracing, central logging; Testing → contract tests.)*
 
-**Rubric (4 pts):** 1 pt two benefits; 1 pt two costs; 2 pts matching mitigations.
-
-</details>
-
-<details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 6.9:</strong> Explain why "database per service" matters. Ordering needs restaurant names for order history: give a valid way to obtain them without reading Catalog's database directly.</summary>
-
-- **Why it matters:** Each service owns its data so teams can evolve schemas and deploy independently; a shared database creates hidden coupling across services.
-- **How Ordering gets restaurant names:** (1) Copy/denormalise the restaurant name onto the order when placed, (2) maintain a local read model in Ordering updated by `RestaurantRenamed` events, or (3) call Catalog's public API.
-
-**Rubric (3 pts):** 1 pt independent schema/deploy ownership; 1 pt shared DB hidden coupling; 1 pt valid decoupled read pattern.
+**Rubric (4 pts):** 1 pt two valid benefits; 1 pt two valid costs; 2 pts matching mitigations.
 
 </details>
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 6.10:</strong> Using at least two factors from the decision framework, argue whether a bank's mobile app team of 120 developers should use microservices.</summary>
+<summary><strong>Question 6.12: Explain why “database per service” matters. Ordering needs restaurant names for the order history: give one way to get them without reading Catalog’s database.</strong></summary>
 
-- **Recommendation:** Yes — microservices (or a few large domain services).
-- **Factors:** (1) *Team size:* ~120 developers (~15 teams of 8) would constantly block each other in one codebase; (2) *Different release & scale needs + Ops maturity/regulation:* payments vs marketing pages release at different cadences, banks typically have strong operations teams, and regulation may require isolating sensitive components.
+- **Why it matters:** Each service owns its data so teams can change schemas and deploy independently; a shared database couples services (hidden coupling).
+- **How Ordering gets names:** Call Catalog's API, copy the name onto the order when placed (denormalise), or keep a local read model updated by `RestaurantRenamed` events.
 
-**Rubric (3 pts):** 1 pt sensible recommendation; 2 pts for two decision-framework factors applied to the bank's context.
+**Rubric (3 pts):** 1 pt own data/schema independence; 1 pt shared DB = hidden coupling; 1 pt valid way to get names.
+
+</details>
+
+<details data-tag="practical" data-meta="3 pts">
+<summary><strong>Question 6.13: Using at least two factors from the decision framework, argue whether a bank’s mobile app team of 120 developers should use microservices.</strong></summary>
+
+- **Recommendation:** **Microservices** (or a few large domain services) is reasonable.
+- **Factors:** Many teams (≈15 teams of 8) that block each other in one codebase; parts with different release needs (payments vs marketing pages); parts with different scale; strong operations skills likely at a bank; regulation may require isolating sensitive parts.
+
+**Rubric (3 pts):** 1 pt recommendation; 2 pts for two factors applied.
 
 </details>
 
@@ -876,7 +1049,7 @@ A **2-developer startup** with rapidly changing domain boundaries needs simplici
 
 ## Section 7 — Week 7: Event-Driven Architecture and Messaging
 
-Covers: commands vs events, messaging models, brokers (RabbitMQ vs Kafka), delivery guarantees, idempotency, DLQs, event versioning, sagas, and transactional outbox.
+Covers: commands and events, messaging models, brokers, RabbitMQ and Kafka, delivery guarantees, event versioning, sagas, outbox, CQRS and event sourcing.
 
 ```mermaid
 flowchart TD
@@ -903,77 +1076,106 @@ flowchart LR
   CON -->|"Always invalid (poison)"| DLQ["Dead-Letter Queue (DLQ)"]
 ```
 
-### Theory & Concept Questions ("Explain…")
+### Theory & Concept Questions (Part A)
 
 <details data-tag="theory">
-<summary><strong>Question 7.1:</strong> Explain how to tell an event (<code>OrderPlaced</code>) apart from commands (<code>SendSms</code>, <code>ChargePayment</code>, <code>AssignRider</code>).</summary>
+<summary><strong>Question 7.1: Explain why OrderPlaced is an event while SendSms, ChargePayment, and AssignRider are commands.</strong></summary>
 
-An **event** is named in the **past tense** because it states an immutable fact that already happened (`OrderPlaced`), whereas imperative verb phrases (`SendSms`) are commands asking a target to do work.
+**Answer:** **OrderPlaced** is an event.
+
+- **Explanation (Key):** Past tense, a fact. The others are commands.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 7.2:</strong> Explain the "competing consumers" pattern when three kitchen workers read from one queue.</summary>
+<summary><strong>Question 7.2: Explain the pattern when three kitchen workers read from one queue so that each order is handled by only one of them.</strong></summary>
 
-Multiple consumers share a single queue so each incoming message/order is delivered to and processed by **only one** worker, distributing load across the pool.
+**Answer:** **Competing consumers.**
 
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 7.3:</strong> Explain what a Kafka consumer does after reading a message and how ordering is guaranteed in Kafka.</summary>
-
-The consumer **commits its offset** while the message stays in the log until the retention period expires (allowing other consumer groups or replays to read it).
-
-Ordering is guaranteed **only within a partition**, so producers set a partition key such as `orderId` to keep related events ordered.
+- **Explanation (Key):** Several consumers on one queue share the work.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 7.4:</strong> Explain what happens under at-least-once delivery if a consumer crashes after doing its work but before acknowledging, and how idempotency prevents duplicate side effects.</summary>
+<summary><strong>Question 7.3: Explain what a Kafka consumer does after reading a message.</strong></summary>
 
-Without an acknowledgement, the broker assumes delivery may have failed and **redelivers the message**, so the work could run twice.
+**Answer:** **Commits its offset; the message stays until the retention period ends.**
 
-To make a consumer **idempotent**, durably record processed event IDs (e.g., via a unique key in the DB) and skip any event ID already seen.
-
-</details>
-
-<details data-tag="theory">
-<summary><strong>Question 7.5:</strong> Explain why a message with invalid data that always fails should be routed to a Dead-Letter Queue (DLQ).</summary>
-
-A poison message would otherwise loop forever on retries and block healthy messages. Moving it to a **DLQ** isolates the failure for inspection without halting the queue.
+- **Explanation (Key):** The log keeps messages; each group tracks its offset.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 7.6:</strong> Explain why adding a new optional field (<code>totalCents</code>) is safe for event schemas, whereas renaming, removing, or changing types breaks consumers.</summary>
+<summary><strong>Question 7.4: Explain how message order is guaranteed in Kafka.</strong></summary>
 
-Additive, optional changes allow older consumers to ignore unknown fields and keep working, whereas renaming `orderId`, removing `items`, or changing `restaurantId` from number to string breaks existing readers.
+**Answer:** **Within a partition.**
+
+- **Explanation (Key):** Only within a partition; use a key such as `orderId`.
 
 </details>
 
 <details data-tag="theory">
-<summary><strong>Question 7.7:</strong> Explain how a Saga undoes a previous step (such as payment after a restaurant rejects an order) without two-phase commit.</summary>
+<summary><strong>Question 7.5: Explain what happens under at-least-once delivery when a consumer finishes its work, then crashes before acknowledging.</strong></summary>
 
-Sagas do not lock databases across services with two-phase commit; instead, each local transaction commits immediately and failures trigger explicit **compensating actions** (such as issuing a refund).
+**Answer:** **The message is delivered again, so the work may run twice.**
+
+- **Explanation (Key):** No ack means redelivery; hence idempotent consumers.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 7.6: Explain how to make a consumer idempotent.</strong></summary>
+
+**Answer:** **Record processed event IDs (e.g., with a unique key) and skip ones already seen.**
+
+- **Explanation (Key):** Deduplicate by event ID, stored durably.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 7.7: Explain where a message that always fails because its data is invalid should go.</strong></summary>
+
+**Answer:** **A dead-letter queue.**
+
+- **Explanation (Key):** A DLQ stops a poison message from looping.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 7.8: Explain which change to an event schema is safest (adding an optional field vs renaming, removing, or changing types).</strong></summary>
+
+**Answer:** **Adding a new optional field totalCents** is safest.
+
+- **Explanation (Key):** Additive, optional changes keep old consumers working.
+
+</details>
+
+<details data-tag="theory">
+<summary><strong>Question 7.9: Explain what happens in a saga when a restaurant rejects an order after payment.</strong></summary>
+
+**Answer:** **A compensating action runs, such as issuing a refund.**
+
+- **Explanation (Key):** Sagas undo with compensating actions, not rollbacks.
 
 </details>
 
 <details data-tag="theory" data-meta="Teacher Highlight">
-<summary><strong>Question 7.8:</strong> Explain the dual-write problem and how the Transactional Outbox pattern solves it.</summary>
+<summary><strong>Question 7.10: Explain what problem the transactional outbox solves.</strong></summary>
 
-- **Problem (Dual-Write):** Saving domain data to a database and publishing an event to a message broker cannot share one distributed transaction, so one can succeed while the other fails (leaving DB and events out of sync).
-- **Solution (Transactional Outbox):** Write the domain row and the event record to an **outbox table inside the same local ACID database transaction**. A separate relay/poller reads the outbox table and publishes to the broker (paired with idempotent consumers), guaranteeing both happen together.
+**Answer:** **Saving data and publishing an event cannot be one transaction, so one may happen without the other.**
+
+- **Explanation (Key):** The dual-write problem.
 
 </details>
 
 ### Practical Questions (Part B)
 
 <details data-tag="practical" data-meta="4 pts">
-<summary><strong>Question 7.9:</strong> Draw or describe a choreographed saga for FoodHub's order: list the events in order for the happy path, and the compensations when payment fails and when the restaurant rejects the order.</summary>
+<summary><strong>Question 7.11: Draw or describe a choreographed saga for FoodHub’s order: list the events in order for the happy path, and the compensation when payment fails and when the restaurant rejects the order.</strong></summary>
 
-- **Happy path:** `OrderPlaced → PaymentAuthorised → OrderAccepted → RiderAssigned → OrderPickedUp → OrderDelivered`.
-- **Payment fails:** `PaymentFailed` → Ordering marks the order `CANCELLED` and notifies the customer.
-- **Restaurant rejects:** `OrderRejected` → Payment issues a refund (`RefundIssued`) → Ordering marks the order `REJECTED` and notifies the customer.
+- **Happy path:** `OrderPlaced → PaymentAuthorised → OrderAccepted → RiderAssigned → OrderPickedUp → OrderDelivered` (2 pts for a correct order with at least 4 events).
+- **Payment fails:** `PaymentFailed` → Ordering marks the order `CANCELLED` and notifies the customer (1 pt).
+- **Restaurant rejects:** `OrderRejected` → Payment issues a refund (`RefundIssued`) → order `REJECTED`, customer notified (1 pt).
 
 ```mermaid
 flowchart LR
@@ -983,54 +1185,26 @@ flowchart LR
   PA -->|"Rejects"| OR["OrderRejected -> RefundIssued -> REJECTED"]
 ```
 
-**Rubric (4 pts):** 2 pts happy path (correct order, ≥4 events); 1 pt payment failure compensation; 1 pt restaurant rejection refund compensation.
+**Rubric (4 pts):** 2 pts happy path; 1 pt payment failure compensation; 1 pt restaurant rejection refund compensation.
 
 </details>
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 7.10:</strong> Compare RabbitMQ and Kafka on two of: message lifetime, ordering, replay, or typical use. State which you would pick for FoodHub today and why.</summary>
+<summary><strong>Question 7.12: Compare RabbitMQ and Kafka on two of: message lifetime, ordering, replay, typical use. Which would you pick for FoodHub today, and why?</strong></summary>
 
-- **Comparisons (any two):** (1) *Lifetime:* RabbitMQ deletes on ack vs Kafka retains messages until retention ends; (2) *Ordering:* RabbitMQ per-queue vs Kafka per-partition; (3) *Replay:* Kafka supports offset replay, RabbitMQ does not by design; (4) *Use:* RabbitMQ for task queues & routing vs Kafka for streaming & analytics.
-- **FoodHub choice:** *RabbitMQ* today because FoodHub has modest volume and a small team that benefits from simpler operations (or *Kafka* if event replay for analytics is a priority).
+- **Comparisons (any two):** RabbitMQ deletes on ack vs Kafka keeps for retention; RabbitMQ per-queue order vs Kafka per-partition order; Kafka can replay, RabbitMQ not by design; RabbitMQ for task queues and routing vs Kafka for streaming and analytics.
+- **FoodHub choice:** `RabbitMQ` (low volume and simple to operate) — or `Kafka` (replay for analytics).
 
-**Rubric (3 pts):** 2 pts for two accurate comparisons; 1 pt for a justified FoodHub choice.
+**Rubric (3 pts):** 2 pts two correct comparisons; 1 pt justified choice.
 
 </details>
 
 <details data-tag="practical" data-meta="3 pts">
-<summary><strong>Question 7.11:</strong> Explain why "exactly-once delivery" is hard over a network, and what real systems do instead.</summary>
+<summary><strong>Question 7.13: Explain why “exactly-once delivery” is hard over a network, and what systems do instead.</strong></summary>
 
-- **Why it is hard (Two Generals' Problem):** When an acknowledgement is lost over an unreliable network, the sender cannot distinguish between "the message was lost" and "only the ack was lost," so it must either risk losing the message or resend it.
-- **What systems do instead:** Use **at-least-once delivery** (retry until acknowledged) combined with **idempotent consumers** (deduplicating via event IDs / durable processed-ID tables), achieving *effectively-once processing*.
+- **Why hard:** The sender cannot know whether a lost acknowledgement means the message was lost or only the ack was lost, so it must either risk loss or resend.
+- **What systems do instead:** Systems use **at-least-once delivery** (resend), and consumers **deduplicate** (idempotency keys / processed-ID table), giving **effectively-once** results.
 
-```mermaid
-sequenceDiagram
-  participant B as Broker
-  participant C as Consumer
-  participant DB as DB (unique eventId)
-  B->>C: "Deliver Event #42"
-  C->>DB: "Save work + eventId #42"
-  C--xB: "ACK lost on network (Two Generals' Problem)"
-  B->>C: "Retry Event #42 (At-least-once)"
-  C->>DB: "Check eventId #42 -> Already exists"
-  Note over C: "Skip duplicate -> Effectively-once"
-```
-
-**Rubric (3 pts):** 1 pt ambiguous lost-ack problem; 1 pt at-least-once resend; 1 pt idempotent consumer deduplication for effectively-once results.
+**Rubric (3 pts):** 1 pt lost ack ambiguity; 1 pt at-least-once resend; 1 pt consumer deduplication giving effectively-once results.
 
 </details>
-
----
-
-## Final 10-Minute Rapid Review Traps
-
-1. **"Architecture" vs "Design":** Architecture covers high-level structures that are hard to change and drive quality attributes; variable names, button colors, and local loops are detailed design.
-2. **C4 "Container" is NOT Docker:** A C4 container is any separately running or data-storing unit (SPA, API, DB).
-3. **ADRs are Immutable:** Never edit or delete an accepted ADR—write a new ADR that supersedes the old one.
-4. **JWT is NOT Encrypted:** Its three Base64URL parts (`Header.Payload.Signature`) are only signed for integrity; anyone can decode and read the payload.
-5. **CORS is for Browsers:** `Origin = Protocol + Domain + Port`; `curl` and native mobile apps ignore CORS, which only stops cross-origin JS in browsers.
-6. **Command vs Event:** A command is an imperative verb (`ChargeCard`); an event is a past-tense immutable fact (`CardCharged`).
-7. **RabbitMQ vs Kafka:** RabbitMQ is a smart broker that deletes messages after ACK; Kafka is a permanent append-only commit log with consumer offsets and replayability.
-8. **Exactly-Once Myth:** Because of the Two Generals' Problem, true exactly-once delivery over unreliable networks is impossible—use **at-least-once delivery + idempotent consumers** for *effectively-once* processing.
-9. **Hexagonal Dependencies Point INWARD:** The domain core defines interfaces (**Ports**); outer technology implements them (**Adapters**).
-10. **Database-Per-Service:** Shared databases create hidden coupling and destroy microservice independence; share foreign data via API calls, creation-time denormalization, or async event read caches.
