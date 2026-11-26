@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T13:21:04.011Z",
+  "generatedAt": "2026-11-26T17:39:59.151Z",
   "subjects": [
     {
       "name": "Software Architecture",
@@ -15,15 +15,27 @@
             },
             {
               "title": "Study Guide",
-              "name": "study.md",
-              "path": "Software Architecture/Midterm/study.md",
-              "type": "md"
+              "name": "study.json",
+              "path": "Software Architecture/Midterm/study.json",
+              "type": "json"
             },
             {
               "title": "Quiz Guide",
-              "name": "quiz.md",
-              "path": "Software Architecture/Midterm/quiz.md",
-              "type": "md"
+              "name": "quiz.json",
+              "path": "Software Architecture/Midterm/quiz.json",
+              "type": "json"
+            },
+            {
+              "title": "What To Remember",
+              "name": "what-to-remember.json",
+              "path": "Software Architecture/Midterm/what-to-remember.json",
+              "type": "json"
+            },
+            {
+              "title": "All Questions",
+              "name": "questions.json",
+              "path": "Software Architecture/Midterm/questions.json",
+              "type": "json"
             },
             {
               "title": "Teachers Node",
@@ -93,5 +105,16 @@
         }
       ]
     }
+  ],
+  "assets": [
+    "Software Architecture/Midterm/_components/quiz-w2-q12-d1.md",
+    "Software Architecture/Midterm/_components/quiz-w7-q11-d1.md",
+    "Software Architecture/Midterm/_components/study-w2-q6-d1.md",
+    "Software Architecture/Midterm/_components/study-w2-q8-d1.md",
+    "Software Architecture/Midterm/_components/study-w3-q6-d1.md",
+    "Software Architecture/Midterm/_components/study-w6-q8-d1.md",
+    "Software Architecture/Midterm/_components/study-w6-q8-d2.md",
+    "Software Architecture/Midterm/_components/study-w7-q11-d1.md",
+    "Software Architecture/Midterm/_components/study-w7-q12-d1.md"
   ]
 }

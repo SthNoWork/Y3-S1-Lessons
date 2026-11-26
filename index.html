@@ -440,6 +440,15 @@
       background: var(--emerald-soft);
     }
 
+    .fmt-json {
+      color: var(--amber);
+      border-color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .md-component-slot { margin: 10px 0; }
+    .md-component-loading { font-size: 13px; color: var(--muted); }
+
     .sidebar-footer {
       padding: 9px 12px;
       border-top: 1px solid var(--border);
@@ -1506,24 +1515,41 @@
       if (typeof mermaid === 'undefined') return;
       const theme = getTheme() === 'dark' ? 'dark' : 'neutral';
       mermaid.initialize({ startOnLoad: false, theme, securityLevel: 'loose' });
+      const hookDet = (det) => {
+        if (!det || det.hasAttribute('data-mermaid-hooked')) return;
+        det.setAttribute('data-mermaid-hooked', '1');
+        det.addEventListener('toggle', () => {
+          if (!det.open) return;
+          det.querySelectorAll('.md-mermaid-box').forEach((b, j) => {
+            if (!b.getAttribute('data-mermaid-rendered')) renderMermaidBox(b, 't-' + j);
+          });
+          det.querySelectorAll('.md-component-slot').forEach((s, j) => {
+            if (!s.getAttribute('data-component-loaded')) loadComponentSlot(s, 'tc-' + j);
+          });
+        });
+      };
+
       const boxes = mdContent.querySelectorAll('.md-mermaid-box');
       for (let i = 0; i < boxes.length; i++) {
         const box = boxes[i];
         box.removeAttribute('data-mermaid-rendered');
         const det = box.closest('details');
         if (det && !det.open) {
-          if (!det.hasAttribute('data-mermaid-hooked')) {
-            det.setAttribute('data-mermaid-hooked', '1');
-            det.addEventListener('toggle', () => {
-              if (!det.open) return;
-              det.querySelectorAll('.md-mermaid-box').forEach((b, j) => {
-                if (!b.getAttribute('data-mermaid-rendered')) renderMermaidBox(b, 't-' + j);
-              });
-            });
-          }
+          hookDet(det);
           continue;
         }
         await renderMermaidBox(box, i);
+      }
+
+      const slots = mdContent.querySelectorAll('.md-component-slot');
+      for (let i = 0; i < slots.length; i++) {
+        const slot = slots[i];
+        const det = slot.closest('details');
+        if (det && !det.open) {
+          hookDet(det);
+          continue;
+        }
+        await loadComponentSlot(slot, 'c-' + i);
       }
     }
 
@@ -1532,6 +1558,7 @@
       try { localStorage.setItem('study-theme', theme); } catch (e) {}
       updateThemeButton();
       if (mdPane.classList.contains('active') && rawMarkdown) {
+        mdContent.querySelectorAll('.md-component-slot .md-mermaid-box').forEach(b => b.removeAttribute('data-mermaid-rendered'));
         renderMermaidInMd();
       }
       if (syncPane.classList.contains('active') && typeof mermaid !== 'undefined') {
@@ -1641,9 +1668,11 @@
     function humanizeTitle(filename) {
       const lower = filename.toLowerCase();
       if (lower === 'overview.md') return 'Course Overview';
-      if (lower === 'study.md') return 'Study Guide';
-      if (lower === 'quiz.md') return 'Quiz Guide';
-      const base = filename.replace(/\.(md|pdf)$/i, '')
+      if (lower === 'study.md' || lower === 'study.json') return 'Study Guide';
+      if (lower === 'quiz.md' || lower === 'quiz.json') return 'Quiz Guide';
+      if (lower === 'what-to-remember.md' || lower === 'what-to-remember.json') return 'What To Remember';
+      if (lower === 'questions.json') return 'All Questions';
+      const base = filename.replace(/\.(md|pdf|json)$/i, '')
         .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
         .replace(/[-_]+/g, ' ')
         .replace(/\s+/g, ' ')
@@ -1655,9 +1684,11 @@
     function rankFile(name) {
       const lower = name.toLowerCase();
       if (lower === 'overview.md') return 0;
-      if (lower === 'study.md') return 1;
-      if (lower === 'quiz.md') return 2;
-      return 3;
+      if (lower === 'study.md' || lower === 'study.json') return 1;
+      if (lower === 'quiz.md' || lower === 'quiz.json') return 2;
+      if (lower === 'what-to-remember.md' || lower === 'what-to-remember.json') return 3;
+      if (lower === 'questions.json') return 4;
+      return 5;
     }
 
     function rankGroup(name) {
@@ -1680,23 +1711,29 @@
       if (!Array.isArray(data.tree)) return null;
 
       const subjectMap = new Map();
+      const assets = [];
       for (const item of data.tree) {
         if (item.type !== 'blob') continue;
-        if (!/\.(md|pdf)$/i.test(item.path)) continue;
         const segs = item.path.split('/');
         if (segs.length < 2) continue;
         if (segs.some(s => s.startsWith('.'))) continue;
+        if (segs.some(s => s.startsWith('_'))) {
+          if (/\.(md|mmd)$/i.test(item.path)) assets.push(item.path);
+          continue;
+        }
+        if (!/\.(md|pdf|json)$/i.test(item.path)) continue;
         const subjectName = segs[0];
         const fileName = segs[segs.length - 1];
         const groupName = segs.length > 2 ? segs.slice(1, -1).join(' / ') : 'General';
         if (!subjectMap.has(subjectName)) subjectMap.set(subjectName, new Map());
         const groupMap = subjectMap.get(subjectName);
         if (!groupMap.has(groupName)) groupMap.set(groupName, []);
+        const type = /\.pdf$/i.test(fileName) ? 'pdf' : (/\.json$/i.test(fileName) ? 'json' : 'md');
         groupMap.get(groupName).push({
           title: humanizeTitle(fileName),
           name: fileName,
           path: item.path,
-          type: /\.pdf$/i.test(fileName) ? 'pdf' : 'md'
+          type
         });
       }
 
@@ -1714,7 +1751,8 @@
               })
             }))
         }));
-      return { subjects };
+      assets.sort();
+      return { subjects, assets };
     }
 
     async function loadManifest() {
@@ -1950,7 +1988,244 @@
       } catch (e) {}
     }
 
+    const componentCache = {};
+
+    function resolveComponentPath(ownerPath, ref) {
+      if (!ref) return '';
+      if (/^https?:\/\//i.test(ref) || ref.startsWith('/')) return ref;
+      const clean = ref.replace(/^\.\//, '');
+      const parts = String(ownerPath || '').split('/');
+      parts.pop();
+      if (!clean.startsWith('_') && !clean.startsWith('../') && clean.includes('/') &&
+          manifestData.subjects.some(s => clean.startsWith(s.name + '/'))) {
+        return clean;
+      }
+      const stack = parts.slice();
+      for (const seg of clean.split('/')) {
+        if (!seg || seg === '.') continue;
+        if (seg === '..') stack.pop();
+        else stack.push(seg);
+      }
+      return stack.join('/');
+    }
+
+    async function loadComponentSlot(slot, idx) {
+      if (!slot || slot.getAttribute('data-component-loaded') === '1') return;
+      const srcPath = slot.getAttribute('data-component-src');
+      if (!srcPath) return;
+      try {
+        if (!componentCache[srcPath]) {
+          const res = await fetch('./' + encodePath(srcPath));
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          componentCache[srcPath] = await res.text();
+        }
+        const raw = componentCache[srcPath];
+        if (/\.mmd$/i.test(srcPath)) {
+          slot.innerHTML = '';
+          const box = document.createElement('div');
+          box.className = 'md-mermaid-box';
+          box.setAttribute('data-mermaid-src', raw);
+          slot.appendChild(box);
+          slot.setAttribute('data-no-audio', '1');
+        } else {
+          slot.innerHTML = marked.parse(raw);
+          transformGitHubAlerts(slot);
+          slot.querySelectorAll('pre > code.language-mermaid').forEach(codeEl => {
+            const box = document.createElement('div');
+            box.className = 'md-mermaid-box';
+            box.setAttribute('data-mermaid-src', codeEl.textContent);
+            codeEl.parentElement.replaceWith(box);
+          });
+          slot.querySelectorAll('pre > code.language-event-storming').forEach(codeEl => {
+            const board = renderEventStormingBoard(codeEl.textContent);
+            codeEl.parentElement.replaceWith(board);
+          });
+          const hasText = Array.from(slot.children).some(ch => !ch.classList.contains('md-mermaid-box') && !ch.classList.contains('es-board'));
+          if (!hasText) slot.setAttribute('data-no-audio', '1');
+        }
+        slot.setAttribute('data-component-loaded', '1');
+        if (typeof mermaid !== 'undefined') {
+          mermaid.initialize({ startOnLoad: false, theme: getTheme() === 'dark' ? 'dark' : 'neutral', securityLevel: 'loose' });
+          const boxes = slot.querySelectorAll('.md-mermaid-box');
+          for (let j = 0; j < boxes.length; j++) {
+            await renderMermaidBox(boxes[j], 'cmp-' + idx + '-' + j);
+          }
+        }
+      } catch (err) {
+        slot.innerHTML = '<div class="md-component-loading">Could not load component <code>' + escapeHtml(srcPath) + '</code>.</div>';
+      }
+    }
+
+    function formatSlideLabel(slides) {
+      if (!slides || !slides.length) return '';
+      if (slides.length === 1) return 'Slide ' + slides[0];
+      const sorted = slides.slice().sort((a, b) => a - b);
+      const isRange = sorted.every((v, i) => i === 0 || v === sorted[i - 1] + 1);
+      if (isRange) return 'Slides ' + sorted[0] + '–' + sorted[sorted.length - 1];
+      return 'Slides ' + sorted.join(' & ');
+    }
+
+    const jsonDeckCache = {};
+
+    async function resolveJsonDeck(deck, filePath) {
+      if (!deck) return deck;
+      if (deck.source) {
+        const srcPath = resolveComponentPath(filePath, deck.source);
+        if (!jsonDeckCache[srcPath]) {
+          const res = await fetch('./' + encodePath(srcPath));
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          jsonDeckCache[srcPath] = await res.json();
+        }
+        const base = jsonDeckCache[srcPath];
+        const filter = deck.filter || {};
+        const bankFilter = filter.bank ? (Array.isArray(filter.bank) ? filter.bank : [filter.bank]) : null;
+        const weekFilter = filter.week ? (Array.isArray(filter.week) ? filter.week.map(Number) : [Number(filter.week)]) : null;
+        const tagFilter = filter.tag ? (Array.isArray(filter.tag) ? filter.tag : [filter.tag]) : null;
+
+        const allQ = Array.isArray(base.questions) ? base.questions : [];
+        const matched = allQ.filter(q => {
+          if (bankFilter && !bankFilter.includes(q.bank)) return false;
+          if (weekFilter && !weekFilter.includes(Number(q.week))) return false;
+          if (tagFilter) {
+            const qTags = Array.isArray(q.tag) ? q.tag : String(q.tag || '').split(/\s+/);
+            if (!tagFilter.some(t => qTags.includes(t))) return false;
+          }
+          return true;
+        });
+
+        const byWeek = new Map();
+        for (const q of matched) {
+          const w = Number(q.week) || 1;
+          if (!byWeek.has(w)) byWeek.set(w, []);
+          byWeek.get(w).push(q);
+        }
+
+        const baseSections = Array.isArray(base.sections) ? base.sections : [];
+        const sections = [];
+        for (const sec of baseSections) {
+          const w = Number(sec.week);
+          if (weekFilter && !weekFilter.includes(w)) continue;
+          const cards = byWeek.get(w) || [];
+          if (cards.length > 0 || (deck.showRememberList && Array.isArray(sec.remember) && sec.remember.length)) {
+            sections.push({ ...sec, cards });
+          }
+        }
+        for (const [w, cards] of byWeek.entries()) {
+          if (!baseSections.some(s => Number(s.week) === w)) {
+            sections.push({ week: w, title: 'Week ' + w, cards });
+          }
+        }
+
+        return {
+          title: deck.title || base.title,
+          blueprint: deck.blueprint !== undefined ? deck.blueprint : base.blueprint,
+          links: deck.links || base.links,
+          showRememberList: !!deck.showRememberList,
+          showCallouts: !!deck.showCallouts,
+          sections
+        };
+      }
+
+      if (Array.isArray(deck.questions)) {
+        const byWeek = new Map();
+        for (const q of deck.questions) {
+          const w = Number(q.week) || 1;
+          if (!byWeek.has(w)) byWeek.set(w, []);
+          const metaArr = Array.isArray(q.meta) ? q.meta.slice() : (q.meta ? [String(q.meta)] : []);
+          if (q.bank && !metaArr.some(m => m.toLowerCase() === String(q.bank).toLowerCase())) {
+            metaArr.unshift(String(q.bank).replace(/^\w/, c => c.toUpperCase()));
+          }
+          byWeek.get(w).push({ ...q, meta: metaArr });
+        }
+        const baseSections = Array.isArray(deck.sections) ? deck.sections : [];
+        const sections = baseSections.map(sec => ({
+          ...sec,
+          cards: byWeek.get(Number(sec.week)) || []
+        })).filter(s => s.cards.length > 0);
+        return {
+          ...deck,
+          showRememberList: false,
+          showCallouts: false,
+          sections
+        };
+      }
+      return deck;
+    }
+
+    function buildHtmlFromJsonDeck(deck, filePath) {
+      const parts = [];
+      parts.push('<h1>' + escapeHtml((deck && deck.title) || 'Study Guide') + '</h1>');
+      if (deck && deck.blueprint) {
+        parts.push('<blockquote><p>[!IMPORTANT] ' + marked.parseInline(String(deck.blueprint)) + '</p></blockquote>');
+      }
+      if (deck && Array.isArray(deck.links) && deck.links.length) {
+        const linkStr = deck.links.map(l => {
+          const href = '#' + encodePath(resolveComponentPath(filePath, l.path || ''));
+          return '<a href="' + escapeHtml(href) + '">' + escapeHtml(l.label || l.path) + '</a>';
+        }).join(' · ');
+        parts.push('<blockquote><p>' + linkStr + '</p></blockquote>');
+      }
+      const sections = (deck && Array.isArray(deck.sections)) ? deck.sections : [];
+      sections.forEach((sec, sIdx) => {
+        const secNum = sec.week || (sIdx + 1);
+        parts.push('<h2>Section ' + secNum + ' — ' + escapeHtml(sec.title || ('Week ' + secNum)) + '</h2>');
+        if (deck.showRememberList !== false && Array.isArray(sec.remember) && sec.remember.length) {
+          if (sec.rememberSlide) {
+            parts.push('<p><em>From Week ' + secNum + ' Slides — ' + escapeHtml(sec.rememberSlide) + '</em></p>');
+          }
+          parts.push('<ol>' + sec.remember.map(r => '<li>' + marked.parseInline(String(r)) + '</li>').join('') + '</ol>');
+        }
+        if (deck.showCallouts !== false && sec.callout && sec.callout.text) {
+          const cType = String(sec.callout.type || 'NOTE').toUpperCase();
+          parts.push('<blockquote><p>[!' + escapeHtml(cType) + '] ' + marked.parseInline(String(sec.callout.text)) + '</p></blockquote>');
+        }
+        const cards = Array.isArray(sec.cards) ? sec.cards : [];
+        cards.forEach((c, cIdx) => {
+          const qNum = cIdx + 1;
+          const tags = Array.isArray(c.tag) ? c.tag.join(' ') : String(c.tag || 'theory');
+          const slides = Array.isArray(c.slides) ? c.slides.map(Number).filter(Boolean) : [];
+          const metaItems = Array.isArray(c.meta) ? c.meta.map(String) : (c.meta ? [String(c.meta)] : []);
+          if (slides.length && !metaItems.some(m => /slides?/i.test(m))) {
+            metaItems.push(formatSlideLabel(slides));
+          }
+          const metaAttr = metaItems.length ? ' data-meta="' + escapeHtml(metaItems.join(' · ')) + '"' : '';
+          const slidesAttr = slides.length ? ' data-slides="' + slides.join(',') + '"' : '';
+
+          let ansHtml = '';
+          if (Array.isArray(c.answer)) {
+            ansHtml = '<ul>' + c.answer.map(item => '<li>' + marked.parseInline(String(item)) + '</li>').join('') + '</ul>';
+          } else if (c.answer) {
+            ansHtml = marked.parse(String(c.answer));
+          }
+
+          let compHtml = '';
+          if (Array.isArray(c.components)) {
+            compHtml = c.components.map(ref => {
+              const resolved = resolveComponentPath(filePath, ref);
+              return '<div class="md-component-slot" data-component-src="' + escapeHtml(resolved) + '"><span class="md-component-loading">Loading diagram…</span></div>';
+            }).join('');
+          }
+
+          parts.push(
+            '<details data-tag="' + escapeHtml(tags) + '"' + metaAttr + slidesAttr + '>' +
+            '<summary><strong>Question ' + secNum + '.' + qNum + ':</strong> ' + escapeHtml(c.question || '') + '</summary>' +
+            ansHtml + compHtml +
+            '</details>'
+          );
+        });
+      });
+      return parts.join('\n');
+    }
+
     function enhanceMarkdownStructure(filePath) {
+      mdContent.querySelectorAll('[data-component]').forEach(el => {
+        const ref = el.getAttribute('data-component');
+        const slot = document.createElement('div');
+        slot.className = 'md-component-slot';
+        slot.setAttribute('data-component-src', resolveComponentPath(filePath, ref));
+        slot.innerHTML = '<span class="md-component-loading">Loading diagram…</span>';
+        el.replaceWith(slot);
+      });
       transformGitHubAlerts(mdContent);
 
       mdContent.querySelectorAll('pre > code.language-mermaid').forEach(codeEl => {
@@ -2903,7 +3178,8 @@
         'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
         'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js',
         'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap',
-        ...allFilesList().map(f => './' + encodePath(f.path))
+        ...allFilesList().map(f => './' + encodePath(f.path)),
+        ...(Array.isArray(manifestData.assets) ? manifestData.assets.map(p => './' + encodePath(p)) : [])
       ];
     }
 
@@ -3085,7 +3361,8 @@
         const slideFiles = [];
         for (const grp of subj.groups) {
           for (const f of grp.files) {
-            if (f.name.toLowerCase() === 'study.md' && !studyFile) {
+            const fname = f.name.toLowerCase();
+            if ((fname === 'study.json' || fname === 'study.md') && (!studyFile || fname === 'study.json')) {
               studyFile = { ...f, subject: subj.name, group: grp.name };
             }
             if (grp.name.toLowerCase() === 'slides' && (f.type === 'pdf' || /\.pdf$/i.test(f.path))) {
@@ -3138,7 +3415,12 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const raw = await res.text();
       const tmp = document.createElement('div');
-      tmp.innerHTML = marked.parse(raw);
+      if (/\.json$/i.test(studyFile.path)) {
+        const deck = await resolveJsonDeck(JSON.parse(raw), studyFile.path);
+        tmp.innerHTML = buildHtmlFromJsonDeck(deck, studyFile.path);
+      } else {
+        tmp.innerHTML = marked.parse(raw);
+      }
       transformGitHubAlerts(tmp);
       tmp.querySelectorAll('pre > code.language-mermaid').forEach(codeEl => {
         const box = document.createElement('div');
@@ -3160,7 +3442,8 @@
           const wm = currentSectionTitle.match(/week\s*0*(\d+)/i) || currentSectionTitle.match(/section\s*0*(\d+)/i);
           if (wm) currentWeek = Number(wm[1]);
         } else if (el.tagName === 'DETAILS') {
-          const slides = parseSlideNumbers(el.getAttribute('data-meta') || '');
+          const ds = el.getAttribute('data-slides');
+          const slides = ds ? ds.split(',').map(Number).filter(Boolean) : parseSlideNumbers(el.getAttribute('data-meta') || '');
           el.setAttribute('data-sync-section', currentSectionTitle);
           if (!byWeekSlide[currentWeek]) byWeekSlide[currentWeek] = {};
           for (const sNum of slides) {
@@ -3321,6 +3604,9 @@
             if (!det.open) return;
             det.querySelectorAll('.md-mermaid-box').forEach((b, j) => {
               if (!b.getAttribute('data-mermaid-rendered')) renderMermaidBox(b, 's-' + idx + '-' + j);
+            });
+            det.querySelectorAll('.md-component-slot').forEach((s, j) => {
+              if (!s.getAttribute('data-component-loaded')) loadComponentSlot(s, 'sc-' + idx + '-' + j);
             });
           });
           const nid = det.getAttribute('data-note-id');
@@ -3701,8 +3987,9 @@
       breadcrumb.innerHTML = `${escapeHtml(file.subject)} / ${escapeHtml(file.group)} / <strong>${escapeHtml(file.title)}</strong>`;
       const encodedUrl = './' + encodePath(file.path);
       const isPdf = file.type === 'pdf' || /\.pdf$/i.test(file.path);
+      const isJson = file.type === 'json' || /\.json$/i.test(file.path);
       openTabLink.href = encodedUrl;
-      openTabLink.textContent = isPdf ? 'Open PDF' : 'Raw .md';
+      openTabLink.textContent = isPdf ? 'Open PDF' : (isJson ? 'Raw .json' : 'Raw .md');
       openTabLink.style.display = 'inline-flex';
 
       if (pushHash) {
@@ -3737,7 +4024,13 @@
         const text = await res.text();
         if (reqId !== openFileSeq) return;
         rawMarkdown = text;
-        mdContent.innerHTML = marked.parse(rawMarkdown);
+        if (isJson) {
+          const deck = await resolveJsonDeck(JSON.parse(text), file.path);
+          if (reqId !== openFileSeq) return;
+          mdContent.innerHTML = buildHtmlFromJsonDeck(deck, file.path);
+        } else {
+          mdContent.innerHTML = marked.parse(rawMarkdown);
+        }
         enhanceMarkdownStructure(file.path);
         await renderMermaidInMd();
       } catch (err) {

@@ -41,9 +41,11 @@ jobs:
           function humanizeTitle(filename) {
             const lower = filename.toLowerCase();
             if (lower === "overview.md") return "Course Overview";
-            if (lower === "study.md") return "Study Guide";
-            if (lower === "quiz.md") return "Quiz Guide";
-            const base = filename.replace(/\.(md|pdf)$/i, "")
+            if (lower === "study.md" || lower === "study.json") return "Study Guide";
+            if (lower === "quiz.md" || lower === "quiz.json") return "Quiz Guide";
+            if (lower === "what-to-remember.md" || lower === "what-to-remember.json") return "What To Remember";
+            if (lower === "questions.json") return "All Questions";
+            const base = filename.replace(/\.(md|pdf|json)$/i, "")
               .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
               .replace(/[-_]+/g, " ")
               .replace(/\s+/g, " ")
@@ -55,9 +57,11 @@ jobs:
           function rankFile(name) {
             const lower = name.toLowerCase();
             if (lower === "overview.md") return 0;
-            if (lower === "study.md") return 1;
-            if (lower === "quiz.md") return 2;
-            return 3;
+            if (lower === "study.md" || lower === "study.json") return 1;
+            if (lower === "quiz.md" || lower === "quiz.json") return 2;
+            if (lower === "what-to-remember.md" || lower === "what-to-remember.json") return 3;
+            if (lower === "questions.json") return 4;
+            return 5;
           }
 
           function rankGroup(name) {
@@ -67,36 +71,53 @@ jobs:
             return 0;
           }
 
-          function walkSubject(dir, subjectName, groupMap) {
+          function walkAssets(dir, assets) {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              if (entry.name.startsWith(".") || skipDirs.has(entry.name)) continue;
+              const full = path.join(dir, entry.name);
+              if (entry.isDirectory()) walkAssets(full, assets);
+              else if (/\.(md|mmd)$/i.test(entry.name)) {
+                assets.push(path.relative(root, full).split(path.sep).join("/"));
+              }
+            }
+          }
+
+          function walkSubject(dir, subjectName, groupMap, assets) {
             const entries = fs.readdirSync(dir, { withFileTypes: true });
             for (const entry of entries) {
               if (entry.name.startsWith(".") || skipDirs.has(entry.name)) continue;
               const full = path.join(dir, entry.name);
               if (entry.isDirectory()) {
-                walkSubject(full, subjectName, groupMap);
-              } else if (/\.(md|pdf)$/i.test(entry.name)) {
+                if (entry.name.startsWith("_")) {
+                  walkAssets(full, assets);
+                } else {
+                  walkSubject(full, subjectName, groupMap, assets);
+                }
+              } else if (/\.(md|pdf|json)$/i.test(entry.name)) {
                 const relFromRoot = path.relative(root, full).split(path.sep).join("/");
                 const relFromSubject = path.relative(path.join(root, subjectName), full).split(path.sep);
                 const groupName = relFromSubject.length > 1 ? relFromSubject.slice(0, -1).join(" / ") : "General";
                 if (!groupMap.has(groupName)) groupMap.set(groupName, []);
+                const type = /\.pdf$/i.test(entry.name) ? "pdf" : (/\.json$/i.test(entry.name) ? "json" : "md");
                 groupMap.get(groupName).push({
                   title: humanizeTitle(entry.name),
                   name: entry.name,
                   path: relFromRoot,
-                  type: /\.pdf$/i.test(entry.name) ? "pdf" : "md"
+                  type
                 });
               }
             }
           }
 
           const topEntries = fs.readdirSync(root, { withFileTypes: true })
-            .filter(e => e.isDirectory() && !e.name.startsWith(".") && !skipDirs.has(e.name))
+            .filter(e => e.isDirectory() && !e.name.startsWith(".") && !e.name.startsWith("_") && !skipDirs.has(e.name))
             .sort((a, b) => a.name.localeCompare(b.name));
 
           const subjects = [];
+          const assets = [];
           for (const dirEntry of topEntries) {
             const groupMap = new Map();
-            walkSubject(path.join(root, dirEntry.name), dirEntry.name, groupMap);
+            walkSubject(path.join(root, dirEntry.name), dirEntry.name, groupMap, assets);
             if (groupMap.size === 0) continue;
 
             const groups = Array.from(groupMap.entries())
@@ -112,9 +133,11 @@ jobs:
             subjects.push({ name: dirEntry.name, groups });
           }
 
+          assets.sort();
           const manifest = {
             generatedAt: new Date().toISOString(),
-            subjects
+            subjects,
+            assets
           };
           fs.writeFileSync(path.join(root, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
           console.log("Generated manifest.json with", subjects.length, "subject(s).");

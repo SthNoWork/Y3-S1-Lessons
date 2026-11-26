@@ -1,0 +1,26 @@
+{
+  "title": "Software System Architecture — Slide Study Guide (Weeks 1–7)",
+  "blueprint": "**Exam Blueprint (`TeachersNode.md`):** Friday **27 November 2026** · Paper-based · **~10 open questions** · **NO QCM** · Worth **30%** · **60% Theory & Concept** (*\"Explain…\"* only, no *\"What is…\"*, e.g., Transactional Outbox) · **40% Practical** (e.g., Event Storming) · Lectures **1 to 7**.",
+  "links": [
+    {
+      "label": "Course Overview",
+      "path": "overview.md"
+    },
+    {
+      "label": "Quiz Guide",
+      "path": "quiz.json"
+    },
+    {
+      "label": "What To Remember",
+      "path": "what-to-remember.json"
+    },
+    {
+      "label": "All Questions",
+      "path": "questions.json"
+    }
+  ],
+  "source": "questions.json",
+  "filter": {
+    "bank": "study"
+  }
+}

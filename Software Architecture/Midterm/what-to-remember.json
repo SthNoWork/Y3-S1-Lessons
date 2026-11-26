@@ -1,0 +1,28 @@
+{
+  "title": "Software System Architecture — What to Remember (Weeks 1–7)",
+  "blueprint": "Every week's final summary slide (*\"Five things to remember\"*) and key takeaways, taken verbatim from `Week 01–07 Slides.pdf`, paired with Q&A recall cards.",
+  "links": [
+    {
+      "label": "Course Overview",
+      "path": "overview.md"
+    },
+    {
+      "label": "Study Guide",
+      "path": "study.json"
+    },
+    {
+      "label": "Quiz Guide",
+      "path": "quiz.json"
+    },
+    {
+      "label": "All Questions",
+      "path": "questions.json"
+    }
+  ],
+  "source": "questions.json",
+  "filter": {
+    "bank": "remember"
+  },
+  "showRememberList": true,
+  "showCallouts": true
+}

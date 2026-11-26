@@ -108,6 +108,54 @@ Follow this exact HTML/Markdown contract so section filters, tag pills, Mermaid 
 
 ---
 
+## Option B (Primary Architecture): Master `questions.json` + Thin View JSONs + `_components/`
+
+For Q&A guides, store all questions in one master `questions.json` and create thin view `.json` files (`study.json`, `quiz.json`, `what-to-remember.json`) that filter `questions.json` by `bank` (while keeping `overview.md` in Markdown and reusable Mermaid/Event-Storming diagrams in `_components/*.md`):
+
+- **Hidden from sidebar, cached offline:** Any folder starting with `_` (e.g., `<Subject>/<Exam>/_components/`) is excluded from the student sidebar and automatically added to `manifest.assets` so `Save Offline` (`sw.js`) caches it.
+- **Master `questions.json` schema:**
+  ```json
+  {
+    "title": "<Subject> — All Questions",
+    "blueprint": "**Exam Blueprint:** ...",
+    "sections": [
+      {
+        "week": 1,
+        "title": "Week 1: ...",
+        "rememberSlide": "Slide 19",
+        "remember": ["Takeaway 1...", "Takeaway 2..."],
+        "callout": { "type": "IMPORTANT", "text": "**Key Idea:** ..." }
+      }
+    ],
+    "questions": [
+      {
+        "id": "study-w1-q1",
+        "bank": "study",
+        "week": 1,
+        "slides": [11],
+        "tag": ["theory"],
+        "meta": ["Concept"],
+        "question": "Explain how the Transactional Outbox solves dual writes.",
+        "answer": "- **Dual-write problem:** ...",
+        "components": ["_components/outbox.md"]
+      }
+    ]
+  }
+  ```
+- **Thin view file (`study.json`, `quiz.json`, `what-to-remember.json`):**
+  ```json
+  {
+    "title": "<Subject> — Slide Study Guide",
+    "source": "questions.json",
+    "filter": { "bank": "study" },
+    "showRememberList": false,
+    "showCallouts": false
+  }
+  ```
+- **Component snippets (`_components/outbox.md`):** Normal Markdown with standard fenced `mermaid` or `event-storming` blocks (loaded lazily when the card opens, and also usable inside `.md` files via `<div data-component="_components/outbox.md"></div>`).
+
+---
+
 ## Step 4 — Verification Checklist
 
 Before finishing any subject conversion:
