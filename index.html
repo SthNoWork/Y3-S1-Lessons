@@ -570,6 +570,7 @@
       min-width: 0;
       height: 100%;
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 24px 36px 64px 36px;
     }
 
@@ -610,6 +611,14 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 28px 34px;
+      min-width: 0;
+      max-width: 100%;
+      overflow-wrap: break-word;
+    }
+
+    .md-section {
+      min-width: 0;
+      max-width: 100%;
     }
 
     /* Keep prose <78ch while tables/diagrams/Q&A grids span full column */
@@ -683,7 +692,9 @@
       padding: 14px 16px;
       border-radius: 8px;
       border: 1px solid var(--border);
-      overflow-x: auto;
+      overflow-x: hidden;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
       font-size: 13px;
       line-height: 1.55;
       margin: 14px 0;
@@ -706,8 +717,9 @@
       border-collapse: collapse;
       margin: 16px 0;
       font-size: 13.5px;
-      display: block;
-      overflow-x: auto;
+      display: table;
+      table-layout: auto;
+      overflow-wrap: break-word;
     }
 
     .md-article th, .md-article td {
@@ -862,10 +874,12 @@
       border-radius: 8px;
       padding: 16px;
       margin: 16px 0;
-      overflow-x: auto;
+      overflow: hidden;
       display: flex;
       justify-content: center;
+      max-width: 100%;
     }
+    .md-mermaid-box svg { max-width: 100%; height: auto; }
 
     .es-board {
       background: var(--surface-raised);
@@ -873,7 +887,7 @@
       border-radius: 8px;
       padding: 14px;
       margin: 16px 0;
-      overflow-x: auto;
+      max-width: 100%;
     }
 
     .es-legend {
@@ -897,14 +911,13 @@
     .es-pink { background: var(--es-pink-bg); border-color: var(--es-pink-bd); color: var(--es-pink-fg); }
 
     .es-timeline {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 12px;
-      min-width: max-content;
     }
 
     .es-context {
-      min-width: 190px;
-      max-width: 240px;
+      min-width: 0;
       border: 1px dashed var(--border-strong);
       border-radius: 8px;
       padding: 10px;
