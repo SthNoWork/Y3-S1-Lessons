@@ -43,13 +43,13 @@ jobs:
             if (lower === "overview.md") return "Course Overview";
             if (lower === "study.md") return "Study Guide";
             if (lower === "quiz.md") return "Quiz Guide";
-            const base = filename.replace(/\.(md|pdf)$/i, "");
-            return base
+            const base = filename.replace(/\.(md|pdf)$/i, "")
               .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
               .replace(/[-_]+/g, " ")
               .replace(/\s+/g, " ")
-              .trim()
-              .replace(/\b\w/g, c => c.toUpperCase());
+              .trim();
+            const normalized = /^[A-Z0-9\s]+$/.test(base) ? base.toLowerCase() : base;
+            return normalized.replace(/\b\w/g, c => c.toUpperCase());
           }
 
           function rankFile(name) {
@@ -58,6 +58,13 @@ jobs:
             if (lower === "study.md") return 1;
             if (lower === "quiz.md") return 2;
             return 3;
+          }
+
+          function rankGroup(name) {
+            const lower = String(name).toLowerCase();
+            if (lower === "slides") return 1;
+            if (lower === "extra") return 2;
+            return 0;
           }
 
           function walkSubject(dir, subjectName, groupMap) {
@@ -93,7 +100,7 @@ jobs:
             if (groupMap.size === 0) continue;
 
             const groups = Array.from(groupMap.entries())
-              .sort((a, b) => a[0].localeCompare(b[0]))
+              .sort((a, b) => (rankGroup(a[0]) - rankGroup(b[0])) || a[0].localeCompare(b[0]))
               .map(([name, files]) => ({
                 name,
                 files: files.sort((a, b) => {

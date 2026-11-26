@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T10:23:15.789Z",
+  "generatedAt": "2026-11-26T13:21:04.011Z",
   "subjects": [
     {
       "name": "Software Architecture",
@@ -76,6 +76,17 @@
               "title": "Week 07 Slides",
               "name": "Week 07 Slides.pdf",
               "path": "Software Architecture/Slides/Week 07 Slides.pdf",
+              "type": "pdf"
+            }
+          ]
+        },
+        {
+          "name": "Extra",
+          "files": [
+            {
+              "title": "Software Architecture Exam Study Guide",
+              "name": "SOFTWARE_ARCHITECTURE_EXAM_STUDY_GUIDE.pdf",
+              "path": "Software Architecture/Extra/SOFTWARE_ARCHITECTURE_EXAM_STUDY_GUIDE.pdf",
               "type": "pdf"
             }
           ]

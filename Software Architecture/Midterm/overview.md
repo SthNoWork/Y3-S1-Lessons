@@ -97,6 +97,13 @@ flowchart TD
 | **Useful Latencies** | Read from memory `≈ 100 ns` · Round trip in a data centre `≈ 0.5 ms` · Read 1 MB from SSD `≈ 1 ms` · Phnom Penh ↔ Singapore `≈ 30–50 ms` · Mobile 4G round trip `≈ 50–100 ms` (first HTTPS page `300–500 ms`) |
 | **Availability** | `99.9%` of a 30-day month = **≈ 43 min** downtime (`30 × 24 × 60 × 0.001`) · 3 services at `99.9%` in sequence = `0.999³ ≈ 99.7%` |
 
+### Core Exam Formulas
+
+- **Average QPS:** `Total Daily Requests ÷ 86,400` *(mental math: `÷ 100,000`)*
+- **Peak QPS:** `Average QPS × Peak Multiplier` *(FoodHub: `5×`)*
+- **Yearly Storage:** `Daily Records × Record Size × 365`
+- **Monthly Downtime (30-day month = `43,200 min`):** `99.9%` ("three nines") = `0.001 × 43,200 ≈ 43 min` · `99.99%` ("four nines") = `0.0001 × 43,200 ≈ 4.3 min` · Sequential chain = `A₁ × A₂ × A₃` (`0.999³ ≈ 99.7%`).
+
 ---
 
 ## Quick Reference: HTTP Status Codes & Hard Vocabulary

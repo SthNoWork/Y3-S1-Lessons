@@ -19,6 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <style>
     :root,
     [data-theme="light"] {
@@ -1136,6 +1137,71 @@
     #pdfPane.active { display: flex; }
     .pdf-frame { flex: 1; width: 100%; height: 100%; border: none; background: var(--bg); }
 
+    #syncPane { display: none; flex-direction: column; width: 100%; height: 100%; overflow: hidden; }
+    #syncPane.active { display: flex; }
+    .sync-bar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
+    }
+    .sync-bar-left, .sync-bar-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .sync-bar select.search-input { width: auto; max-width: 220px; }
+    .sync-split {
+      flex: 1; min-height: 0; display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr); overflow: hidden;
+    }
+    .sync-slide-pane {
+      position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+      background: var(--sidebar-bg); border-right: 1px solid var(--border); padding: 14px; user-select: none;
+    }
+    #syncCanvas {
+      display: block; max-width: 100%; max-height: 100%; border-radius: 6px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28); background: #fff;
+    }
+    .sync-slide-status {
+      position: absolute; inset: 14px; display: flex; align-items: center; justify-content: center;
+      text-align: center; color: var(--muted); font-size: 14px; pointer-events: none;
+    }
+    .sync-qa-pane {
+      display: flex; flex-direction: column; min-height: 0; background: var(--bg); overflow: hidden;
+    }
+    .sync-qa-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px; }
+    .sync-qa-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+      font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 15px;
+    }
+    .sync-qa-list.md-article {
+      max-width: none; margin: 0; padding: 0; border: none; background: transparent; box-shadow: none;
+    }
+    .sync-qa-list details { margin-bottom: 10px; }
+    .sync-empty {
+      padding: 18px 16px; border: 1px dashed var(--border-strong); border-radius: 10px;
+      color: var(--muted); text-align: center; font-size: 14px; background: var(--surface);
+    }
+    .sync-empty .ctrl-btn { margin-top: 10px; }
+    .sync-notes-box {
+      flex-shrink: 0; border-top: 1px solid var(--border); background: var(--surface);
+      padding: 10px 14px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .sync-notes-head {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted);
+    }
+    #syncNoteInput {
+      width: 100%; min-height: 68px; max-height: 160px; resize: vertical; padding: 8px 10px;
+      border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text);
+      font: inherit; font-size: 13.5px; line-height: 1.45;
+    }
+    #syncNoteInput:focus { outline: none; border-color: var(--accent); }
+    #slideSyncBtn.is-active, #syncSkipEmptyBtn.is-active, #syncExpandBtn.is-active, #syncCopyNotesBtn.has-notes {
+      background: var(--accent-soft); color: var(--accent); border-color: var(--accent);
+    }
+    @media (max-width: 900px) {
+      .sync-split { grid-template-columns: 1fr; grid-template-rows: 42vh minmax(0, 1fr); }
+      .sync-slide-pane { border-right: none; border-bottom: 1px solid var(--border); padding: 8px; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -1151,7 +1217,7 @@
         overflow: visible !important;
         display: block !important;
       }
-      .topbar, .sidebar, .md-outline, .md-toolbar, .progress-track, .check-btn, .audio-dock, .qa-play-btn, #mdAudioBtn, #offlineBtn {
+      .topbar, .sidebar, .md-outline, .md-toolbar, .progress-track, .check-btn, .audio-dock, .qa-play-btn, #mdAudioBtn, #slideSyncBtn, #offlineBtn, .sync-bar, .sync-notes-box {
         display: none !important;
       }
       .md-article {
@@ -1188,6 +1254,7 @@
           <span id="timerText">25:00</span>
         </button>
         <button class="ctrl-btn" id="offlineBtn" type="button" title="Save all study guides for offline viewing and reload">Save Offline</button>
+        <button class="ctrl-btn" id="slideSyncBtn" type="button" disabled title="Study slides side-by-side with matching questions">Slide Sync</button>
         <button class="ctrl-btn" id="mdAudioBtn" type="button" disabled title="Open Q&A Audiobook Player">Audiobook</button>
         <button class="ctrl-btn topbar-secondary" id="focusBtn" type="button" title="Toggle Focus Mode (F)">Focus</button>
         <button class="ctrl-btn topbar-secondary" id="themeToggle" type="button" title="Switch light / dark mode">Dark</button>
@@ -1249,6 +1316,44 @@
         </div>
         <div class="view-pane" id="pdfPane">
           <iframe class="pdf-frame" id="pdfFrame" title="PDF Slide Viewer"></iframe>
+        </div>
+        <div class="view-pane" id="syncPane">
+          <div class="sync-bar">
+            <div class="sync-bar-left">
+              <select class="search-input" id="syncWeekSelect" title="Select slide deck"></select>
+              <button class="ctrl-btn" id="syncPrevBtn" type="button" title="Previous slide (←)">◀ Prev</button>
+              <select class="search-input" id="syncPageSelect" title="Jump to slide"></select>
+              <button class="ctrl-btn" id="syncNextBtn" type="button" title="Next slide (→)">Next ▶</button>
+            </div>
+            <div class="sync-bar-right">
+              <button class="ctrl-btn" id="syncSkipEmptyBtn" type="button" title="Skip title/divider slides with no questions">Skip empty</button>
+              <button class="ctrl-btn" id="syncExpandBtn" type="button" title="Always expand answers across all slides">Auto-expand</button>
+              <button class="ctrl-btn" id="syncCopyNotesBtn" type="button" title="Copy all slide suggestions as Markdown">Copy Notes (0)</button>
+              <button class="ctrl-btn" id="syncClearNotesBtn" type="button" title="Clear all saved suggestions" style="display:none;">Clear</button>
+            </div>
+          </div>
+          <div class="sync-split">
+            <div class="sync-slide-pane" id="syncSlidePane">
+              <canvas id="syncCanvas"></canvas>
+              <div class="sync-slide-status" id="syncSlideStatus" style="display:none;"></div>
+            </div>
+            <div class="sync-qa-pane">
+              <div class="sync-qa-scroll" id="syncQaScroll">
+                <div class="sync-qa-head">
+                  <span id="syncQaTitle">Week 1 · Slide 1</span>
+                  <span class="mastery-pill" id="syncQaCount">0 questions</span>
+                </div>
+                <div class="md-article sync-qa-list" id="syncQaList"></div>
+              </div>
+              <div class="sync-notes-box">
+                <div class="sync-notes-head">
+                  <strong id="syncNoteLabel">Suggestion for Week 1 · Slide 1</strong>
+                  <span id="syncNoteStatus">Auto-saved locally</span>
+                </div>
+                <textarea id="syncNoteInput" rows="3" placeholder="Type what to add, clarify, or fix for this slide… then click Copy Notes to send all feedback back."></textarea>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
@@ -1405,6 +1510,13 @@
       if (mdPane.classList.contains('active') && rawMarkdown) {
         renderMermaidInMd();
       }
+      if (syncPane.classList.contains('active') && typeof mermaid !== 'undefined') {
+        mermaid.initialize({ startOnLoad: false, theme: theme === 'dark' ? 'dark' : 'neutral', securityLevel: 'loose' });
+        syncQaList.querySelectorAll('.md-mermaid-box[data-mermaid-rendered]').forEach((b, j) => {
+          b.removeAttribute('data-mermaid-rendered');
+          renderMermaidBox(b, 'st-' + j);
+        });
+      }
     }
 
     themeToggle.addEventListener('click', () => {
@@ -1507,13 +1619,13 @@
       if (lower === 'overview.md') return 'Course Overview';
       if (lower === 'study.md') return 'Study Guide';
       if (lower === 'quiz.md') return 'Quiz Guide';
-      const base = filename.replace(/\.(md|pdf)$/i, '');
-      return base
+      const base = filename.replace(/\.(md|pdf)$/i, '')
         .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
         .replace(/[-_]+/g, ' ')
         .replace(/\s+/g, ' ')
-        .trim()
-        .replace(/\b\w/g, c => c.toUpperCase());
+        .trim();
+      const normalized = /^[A-Z0-9\s]+$/.test(base) ? base.toLowerCase() : base;
+      return normalized.replace(/\b\w/g, c => c.toUpperCase());
     }
 
     function rankFile(name) {
@@ -1522,6 +1634,13 @@
       if (lower === 'study.md') return 1;
       if (lower === 'quiz.md') return 2;
       return 3;
+    }
+
+    function rankGroup(name) {
+      const lower = String(name).toLowerCase();
+      if (lower === 'slides') return 1;
+      if (lower === 'extra') return 2;
+      return 0;
     }
 
     /* --- Auto-Discovery --- */
@@ -1562,7 +1681,7 @@
         .map(([name, groupMap]) => ({
           name,
           groups: Array.from(groupMap.entries())
-            .sort((a, b) => a[0].localeCompare(b[0]))
+            .sort((a, b) => (rankGroup(a[0]) - rankGroup(b[0])) || a[0].localeCompare(b[0]))
             .map(([gName, files]) => ({
               name: gName,
               files: files.sort((a, b) => {
@@ -2217,6 +2336,8 @@
         const hc = h2.cloneNode(true);
         hc.querySelectorAll('.check-btn').forEach(n => n.remove());
         sectionTitle = hc.textContent.trim();
+      } else if (detailsEl.getAttribute('data-sync-section')) {
+        sectionTitle = detailsEl.getAttribute('data-sync-section');
       }
       return { el: detailsEl, sectionTitle, questionLines, answerLines };
     }
@@ -2229,7 +2350,8 @@
 
     function rebuildAudioDeck() {
       const prevEl = audioDeck[cardIdx] ? audioDeck[cardIdx].el : null;
-      const all = Array.from(mdContent.querySelectorAll('details'));
+      const cardRoot = syncPane.classList.contains('active') ? syncQaList : mdContent;
+      const all = Array.from(cardRoot.querySelectorAll('details'));
       all.forEach(d => {
         const sum = d.querySelector(':scope > summary');
         if (sum && !sum.querySelector('.qa-play-btn')) {
@@ -2754,6 +2876,8 @@
         './', './index.html', './manifest.json',
         'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
         'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
+        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js',
         'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap',
         ...allFilesList().map(f => './' + encodePath(f.path))
       ];
@@ -2876,13 +3000,516 @@
     window.addEventListener('beforeunload', () => cancelSpeechOnly());
     initMediaSession();
 
+    /* --- Slide-Sync Mode + Per-Slide Suggestion Box --- */
+    const slideSyncBtn = document.getElementById('slideSyncBtn');
+    const syncPane = document.getElementById('syncPane');
+    const syncWeekSelect = document.getElementById('syncWeekSelect');
+    const syncPrevBtn = document.getElementById('syncPrevBtn');
+    const syncPageSelect = document.getElementById('syncPageSelect');
+    const syncNextBtn = document.getElementById('syncNextBtn');
+    const syncSkipEmptyBtn = document.getElementById('syncSkipEmptyBtn');
+    const syncExpandBtn = document.getElementById('syncExpandBtn');
+    const syncCopyNotesBtn = document.getElementById('syncCopyNotesBtn');
+    const syncClearNotesBtn = document.getElementById('syncClearNotesBtn');
+    const syncSlidePane = document.getElementById('syncSlidePane');
+    const syncCanvas = document.getElementById('syncCanvas');
+    const syncSlideStatus = document.getElementById('syncSlideStatus');
+    const syncQaScroll = document.getElementById('syncQaScroll');
+    const syncQaTitle = document.getElementById('syncQaTitle');
+    const syncQaCount = document.getElementById('syncQaCount');
+    const syncQaList = document.getElementById('syncQaList');
+    const syncNoteLabel = document.getElementById('syncNoteLabel');
+    const syncNoteStatus = document.getElementById('syncNoteStatus');
+    const syncNoteInput = document.getElementById('syncNoteInput');
+
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    }
+
+    const syncState = {
+      subject: '',
+      studyFile: null,
+      slideFiles: [],
+      returnFile: null,
+      weekIdx: 0,
+      pageNum: 1,
+      skipEmpty: lsGet('study-sync-skip-empty', '0') === '1',
+      autoExpand: lsGet('study-sync-auto-expand', '0') === '1',
+      studyCache: {},
+      pdfDocs: {},
+      renderTask: null,
+      renderSeq: 0,
+      resizeTimer: null
+    };
+
+    function getSyncConfigForSubject(subjectName) {
+      const candidates = [];
+      if (subjectName) {
+        const s = manifestData.subjects.find(x => x.name === subjectName);
+        if (s) candidates.push(s);
+      }
+      for (const s of manifestData.subjects) {
+        if (!candidates.includes(s)) candidates.push(s);
+      }
+      for (const subj of candidates) {
+        let studyFile = null;
+        const slideFiles = [];
+        for (const grp of subj.groups) {
+          for (const f of grp.files) {
+            if (f.name.toLowerCase() === 'study.md' && !studyFile) {
+              studyFile = { ...f, subject: subj.name, group: grp.name };
+            }
+            if (grp.name.toLowerCase() === 'slides' && (f.type === 'pdf' || /\.pdf$/i.test(f.path))) {
+              const m = f.name.match(/(?:week|lecture|w)\s*0*(\d+)/i);
+              slideFiles.push({
+                ...f,
+                subject: subj.name,
+                group: grp.name,
+                weekNum: m ? Number(m[1]) : slideFiles.length + 1
+              });
+            }
+          }
+        }
+        if (studyFile && slideFiles.length > 0) {
+          slideFiles.sort((a, b) => (a.weekNum - b.weekNum) || a.title.localeCompare(b.title));
+          return { subject: subj.name, studyFile, slideFiles };
+        }
+      }
+      return null;
+    }
+
+    function updateSlideSyncButton() {
+      const cfg = getSyncConfigForSubject(activeFile ? activeFile.subject : syncState.subject);
+      slideSyncBtn.disabled = !cfg;
+      slideSyncBtn.classList.toggle('is-active', syncPane.classList.contains('active'));
+    }
+
+    function parseSlideNumbers(meta) {
+      if (!meta) return [];
+      const m = meta.match(/slides?\s+([0-9,\s&–—-]+)/i);
+      if (!m) return [];
+      const nums = new Set();
+      for (const part of m[1].split(/[,&]+/)) {
+        const range = part.trim().match(/^(\d+)\s*[–—-]\s*(\d+)$/);
+        if (range) {
+          const start = Number(range[1]);
+          const end = Number(range[2]);
+          for (let n = Math.min(start, end); n <= Math.max(start, end); n++) nums.add(n);
+        } else {
+          const single = part.trim().match(/^(\d+)$/);
+          if (single) nums.add(Number(single[1]));
+        }
+      }
+      return Array.from(nums).sort((a, b) => a - b);
+    }
+
+    async function loadSyncStudyIndex(studyFile) {
+      if (syncState.studyCache[studyFile.path]) return syncState.studyCache[studyFile.path];
+      const res = await fetch('./' + encodePath(studyFile.path));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const raw = await res.text();
+      const tmp = document.createElement('div');
+      tmp.innerHTML = marked.parse(raw);
+      transformGitHubAlerts(tmp);
+      tmp.querySelectorAll('pre > code.language-mermaid').forEach(codeEl => {
+        const box = document.createElement('div');
+        box.className = 'md-mermaid-box';
+        box.setAttribute('data-mermaid-src', codeEl.textContent);
+        codeEl.parentElement.replaceWith(box);
+      });
+      tmp.querySelectorAll('pre > code.language-event-storming').forEach(codeEl => {
+        const board = renderEventStormingBoard(codeEl.textContent);
+        codeEl.parentElement.replaceWith(board);
+      });
+
+      const byWeekSlide = {};
+      let currentWeek = 1;
+      let currentSectionTitle = '';
+      for (const el of Array.from(tmp.children)) {
+        if (el.tagName === 'H2') {
+          currentSectionTitle = el.textContent.trim();
+          const wm = currentSectionTitle.match(/week\s*0*(\d+)/i) || currentSectionTitle.match(/section\s*0*(\d+)/i);
+          if (wm) currentWeek = Number(wm[1]);
+        } else if (el.tagName === 'DETAILS') {
+          const slides = parseSlideNumbers(el.getAttribute('data-meta') || '');
+          el.setAttribute('data-sync-section', currentSectionTitle);
+          if (!byWeekSlide[currentWeek]) byWeekSlide[currentWeek] = {};
+          for (const sNum of slides) {
+            if (!byWeekSlide[currentWeek][sNum]) byWeekSlide[currentWeek][sNum] = [];
+            byWeekSlide[currentWeek][sNum].push(el.outerHTML);
+          }
+        }
+      }
+      syncState.studyCache[studyFile.path] = byWeekSlide;
+      return byWeekSlide;
+    }
+
+    async function getSyncPdfDoc(slideFile) {
+      if (syncState.pdfDocs[slideFile.path]) return syncState.pdfDocs[slideFile.path];
+      if (!window.pdfjsLib) throw new Error('PDF.js failed to load. Connect online or click Save Offline first.');
+      const task = pdfjsLib.getDocument('./' + encodePath(slideFile.path));
+      const doc = await task.promise;
+      syncState.pdfDocs[slideFile.path] = doc;
+      return doc;
+    }
+
+    function getSyncNotesKey(subject) {
+      return 'study-sync-notes::' + subject;
+    }
+
+    function loadSyncNotes(subject) {
+      try { return JSON.parse(lsGet(getSyncNotesKey(subject), '{}')) || {}; } catch (e) { return {}; }
+    }
+
+    function saveSyncNotes(subject, notes) {
+      lsSet(getSyncNotesKey(subject), JSON.stringify(notes));
+    }
+
+    function syncNoteId(weekNum, pageNum) {
+      return 'w' + weekNum + 's' + pageNum;
+    }
+
+    function updateSyncNotesUI() {
+      const notes = loadSyncNotes(syncState.subject);
+      const count = Object.keys(notes).length;
+      syncCopyNotesBtn.textContent = 'Copy Notes (' + count + ')';
+      syncCopyNotesBtn.classList.toggle('has-notes', count > 0);
+      syncClearNotesBtn.style.display = count > 0 ? 'inline-flex' : 'none';
+      const sf = syncState.slideFiles[syncState.weekIdx];
+      if (sf) {
+        const key = syncNoteId(sf.weekNum, syncState.pageNum);
+        syncNoteLabel.textContent = 'Suggestion for Week ' + sf.weekNum + ' · Slide ' + syncState.pageNum;
+        syncNoteInput.value = notes[key] || '';
+        syncNoteStatus.textContent = notes[key] ? 'Saved locally' : 'Auto-saved locally';
+      }
+    }
+
+    function populateSyncWeekSelect() {
+      syncWeekSelect.innerHTML = '';
+      syncState.slideFiles.forEach((sf, i) => {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = sf.title;
+        syncWeekSelect.appendChild(opt);
+      });
+      syncWeekSelect.value = String(syncState.weekIdx);
+    }
+
+    function populateSyncPageSelect(numPages, weekMap) {
+      const sf = syncState.slideFiles[syncState.weekIdx];
+      const notes = loadSyncNotes(syncState.subject);
+      syncPageSelect.innerHTML = '';
+      for (let p = 1; p <= numPages; p++) {
+        const opt = document.createElement('option');
+        opt.value = String(p);
+        const qCount = (weekMap && weekMap[p]) ? weekMap[p].length : 0;
+        const hasNote = !!notes[syncNoteId(sf.weekNum, p)];
+        let label = 'Slide ' + p + ' / ' + numPages;
+        if (qCount > 0) label += ' · ' + qCount + (qCount === 1 ? ' Q' : ' Qs');
+        if (hasNote) label += ' ✎';
+        opt.textContent = label;
+        syncPageSelect.appendChild(opt);
+      }
+      syncPageSelect.value = String(syncState.pageNum);
+    }
+
+    function renderSyncQuestions(weekMap) {
+      const sf = syncState.slideFiles[syncState.weekIdx];
+      const cards = (weekMap && weekMap[syncState.pageNum]) || [];
+      syncQaTitle.textContent = 'Week ' + sf.weekNum + ' · Slide ' + syncState.pageNum;
+      syncQaCount.textContent = cards.length + (cards.length === 1 ? ' question' : ' questions');
+      syncQaScroll.scrollTop = 0;
+
+      if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({ startOnLoad: false, theme: getTheme() === 'dark' ? 'dark' : 'neutral', securityLevel: 'loose' });
+      }
+      if (cards.length === 0) {
+        const hasNext = syncState.pageNum < (syncState.pdfDocs[sf.path] ? syncState.pdfDocs[sf.path].numPages : syncState.pageNum) ||
+          syncState.weekIdx < syncState.slideFiles.length - 1;
+        syncQaList.innerHTML = '<div class="sync-empty"><div>No questions on this slide (title or divider slide).</div>' +
+          (hasNext ? '<button class="ctrl-btn" id="syncEmptyNextBtn" type="button">Next slide ▶</button>' : '') +
+          '</div>';
+        const btn = document.getElementById('syncEmptyNextBtn');
+        if (btn) btn.addEventListener('click', () => stepSyncSlide(1));
+      } else {
+        syncQaList.innerHTML = cards.join('');
+        syncQaList.querySelectorAll('details').forEach((det, idx) => {
+          det.addEventListener('toggle', () => {
+            if (!det.open) return;
+            det.querySelectorAll('.md-mermaid-box').forEach((b, j) => {
+              if (!b.getAttribute('data-mermaid-rendered')) renderMermaidBox(b, 's-' + idx + '-' + j);
+            });
+          });
+          if (syncState.autoExpand) det.open = true;
+        });
+      }
+      rebuildAudioDeck();
+    }
+
+    async function renderSyncCurrent() {
+      const sf = syncState.slideFiles[syncState.weekIdx];
+      if (!sf) return;
+      const seq = ++syncState.renderSeq;
+      stopAudio();
+      breadcrumb.innerHTML = `${escapeHtml(syncState.subject)} / <strong>Slide Sync</strong> · ${escapeHtml(sf.title)} (Slide ${syncState.pageNum})`;
+      openTabLink.href = './' + encodePath(sf.path);
+      openTabLink.textContent = 'Open PDF';
+      openTabLink.style.display = 'inline-flex';
+      lsSet('study-sync-pos::' + syncState.subject, JSON.stringify({ weekNum: sf.weekNum, pageNum: syncState.pageNum }));
+
+      syncSlideStatus.style.display = 'flex';
+      syncSlideStatus.textContent = 'Loading slide…';
+
+      let studyMap = {};
+      try {
+        studyMap = await loadSyncStudyIndex(syncState.studyFile);
+      } catch (e) {}
+      if (seq !== syncState.renderSeq) return;
+
+      const weekMap = studyMap[sf.weekNum] || {};
+      updateSyncNotesUI();
+
+      try {
+        const doc = await getSyncPdfDoc(sf);
+        if (seq !== syncState.renderSeq) return;
+        syncState.pageNum = Math.max(1, Math.min(syncState.pageNum, doc.numPages));
+        syncWeekSelect.value = String(syncState.weekIdx);
+        populateSyncPageSelect(doc.numPages, weekMap);
+        renderSyncQuestions(weekMap);
+        updateSyncNotesUI();
+
+        syncPrevBtn.disabled = (syncState.weekIdx === 0 && syncState.pageNum === 1);
+        syncNextBtn.disabled = (syncState.weekIdx === syncState.slideFiles.length - 1 && syncState.pageNum === doc.numPages);
+
+        const page = await doc.getPage(syncState.pageNum);
+        if (seq !== syncState.renderSeq) return;
+        const baseVp = page.getViewport({ scale: 1 });
+        const pad = window.innerWidth <= 900 ? 16 : 28;
+        const availW = Math.max(syncSlidePane.clientWidth - pad, 160);
+        const availH = Math.max(syncSlidePane.clientHeight - pad, 140);
+        const fitScale = Math.min(availW / baseVp.width, availH / baseVp.height);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const cssVp = page.getViewport({ scale: fitScale });
+        const renderVp = page.getViewport({ scale: fitScale * dpr });
+
+        if (syncState.renderTask) {
+          try { syncState.renderTask.cancel(); } catch (e) {}
+        }
+        syncCanvas.width = Math.max(1, Math.floor(renderVp.width));
+        syncCanvas.height = Math.max(1, Math.floor(renderVp.height));
+        syncCanvas.style.width = Math.floor(cssVp.width) + 'px';
+        syncCanvas.style.height = Math.floor(cssVp.height) + 'px';
+
+        const ctx = syncCanvas.getContext('2d');
+        const rt = page.render({ canvasContext: ctx, viewport: renderVp });
+        syncState.renderTask = rt;
+        await rt.promise;
+        if (seq !== syncState.renderSeq) return;
+        syncSlideStatus.style.display = 'none';
+      } catch (err) {
+        if (seq !== syncState.renderSeq || (err && err.name === 'RenderingCancelledException')) return;
+        syncSlideStatus.style.display = 'flex';
+        syncSlideStatus.textContent = 'Could not render slide: ' + (err && err.message ? err.message : err);
+        renderSyncQuestions(weekMap);
+      }
+    }
+
+    async function stepSyncSlide(delta) {
+      let wIdx = syncState.weekIdx;
+      let pNum = syncState.pageNum;
+      let studyMap = {};
+      try { studyMap = await loadSyncStudyIndex(syncState.studyFile); } catch (e) {}
+
+      for (let steps = 0; steps < 300; steps++) {
+        const sf = syncState.slideFiles[wIdx];
+        if (!sf) break;
+        const doc = await getSyncPdfDoc(sf);
+        pNum += delta;
+        if (pNum > doc.numPages) {
+          if (wIdx + 1 >= syncState.slideFiles.length) return;
+          wIdx++;
+          pNum = 1;
+        } else if (pNum < 1) {
+          if (wIdx - 1 < 0) return;
+          wIdx--;
+          const prevDoc = await getSyncPdfDoc(syncState.slideFiles[wIdx]);
+          pNum = prevDoc.numPages;
+        }
+        const targetSf = syncState.slideFiles[wIdx];
+        const hasQ = !!(studyMap[targetSf.weekNum] && studyMap[targetSf.weekNum][pNum] && studyMap[targetSf.weekNum][pNum].length);
+        if (!syncState.skipEmpty || hasQ) {
+          syncState.weekIdx = wIdx;
+          syncState.pageNum = pNum;
+          await renderSyncCurrent();
+          return;
+        }
+      }
+    }
+
+    async function openSlideSync(subjectName) {
+      const cfg = getSyncConfigForSubject(subjectName || (activeFile && activeFile.subject));
+      if (!cfg) return;
+      stopAudio();
+      if (activeFile && activeFile.path) syncState.returnFile = activeFile;
+      syncState.subject = cfg.subject;
+      syncState.studyFile = cfg.studyFile;
+      syncState.slideFiles = cfg.slideFiles;
+      syncState.weekIdx = 0;
+      syncState.pageNum = 1;
+
+      if (activeFile && activeFile.group && activeFile.group.toLowerCase() === 'slides') {
+        const idx = cfg.slideFiles.findIndex(f => f.path === activeFile.path);
+        if (idx >= 0) syncState.weekIdx = idx;
+      } else {
+        try {
+          const saved = JSON.parse(lsGet('study-sync-pos::' + cfg.subject, 'null'));
+          if (saved && saved.weekNum) {
+            const idx = cfg.slideFiles.findIndex(f => f.weekNum === saved.weekNum);
+            if (idx >= 0) {
+              syncState.weekIdx = idx;
+              syncState.pageNum = Math.max(1, Number(saved.pageNum) || 1);
+            }
+          }
+        } catch (e) {}
+      }
+
+      pdfFrame.src = 'about:blank';
+      mdOutline.classList.add('hidden');
+      populateSyncWeekSelect();
+      syncSkipEmptyBtn.classList.toggle('is-active', syncState.skipEmpty);
+      syncExpandBtn.classList.toggle('is-active', syncState.autoExpand);
+      showPane(syncPane);
+      if (window.innerWidth <= 820) sidebar.classList.add('collapsed');
+      await renderSyncCurrent();
+    }
+
+    slideSyncBtn.addEventListener('click', () => {
+      if (slideSyncBtn.disabled) return;
+      if (syncPane.classList.contains('active')) {
+        const back = syncState.returnFile || syncState.studyFile;
+        if (back) openFile(back); else showOverview();
+      } else {
+        openSlideSync();
+      }
+      slideSyncBtn.blur();
+    });
+
+    syncPrevBtn.addEventListener('click', () => { stepSyncSlide(-1); syncPrevBtn.blur(); });
+    syncNextBtn.addEventListener('click', () => { stepSyncSlide(1); syncNextBtn.blur(); });
+    syncWeekSelect.addEventListener('change', async () => {
+      syncState.weekIdx = Number(syncWeekSelect.value) || 0;
+      syncState.pageNum = 1;
+      if (syncState.skipEmpty) {
+        let studyMap = {};
+        try { studyMap = await loadSyncStudyIndex(syncState.studyFile); } catch (e) {}
+        const sf = syncState.slideFiles[syncState.weekIdx];
+        const wm = (sf && studyMap[sf.weekNum]) || {};
+        const firstNonEmpty = Object.keys(wm).map(Number).filter(n => wm[n] && wm[n].length).sort((a, b) => a - b)[0];
+        if (firstNonEmpty) syncState.pageNum = firstNonEmpty;
+      }
+      await renderSyncCurrent();
+      syncWeekSelect.blur();
+    });
+    syncPageSelect.addEventListener('change', async () => {
+      syncState.pageNum = Number(syncPageSelect.value) || 1;
+      await renderSyncCurrent();
+      syncPageSelect.blur();
+    });
+    syncSkipEmptyBtn.addEventListener('click', () => {
+      syncState.skipEmpty = !syncState.skipEmpty;
+      lsSet('study-sync-skip-empty', syncState.skipEmpty ? '1' : '0');
+      syncSkipEmptyBtn.classList.toggle('is-active', syncState.skipEmpty);
+      syncSkipEmptyBtn.blur();
+    });
+    syncExpandBtn.addEventListener('click', () => {
+      syncState.autoExpand = !syncState.autoExpand;
+      lsSet('study-sync-auto-expand', syncState.autoExpand ? '1' : '0');
+      syncExpandBtn.classList.toggle('is-active', syncState.autoExpand);
+      syncQaList.querySelectorAll('details').forEach(d => { d.open = syncState.autoExpand; });
+      syncExpandBtn.blur();
+    });
+
+    syncNoteInput.addEventListener('input', () => {
+      const sf = syncState.slideFiles[syncState.weekIdx];
+      if (!sf) return;
+      const notes = loadSyncNotes(syncState.subject);
+      const key = syncNoteId(sf.weekNum, syncState.pageNum);
+      const val = syncNoteInput.value;
+      if (val.trim()) notes[key] = val;
+      else delete notes[key];
+      saveSyncNotes(syncState.subject, notes);
+      const count = Object.keys(notes).length;
+      syncCopyNotesBtn.textContent = 'Copy Notes (' + count + ')';
+      syncCopyNotesBtn.classList.toggle('has-notes', count > 0);
+      syncClearNotesBtn.style.display = count > 0 ? 'inline-flex' : 'none';
+      syncNoteStatus.textContent = val.trim() ? 'Saved locally' : 'Cleared';
+      const opt = syncPageSelect.querySelector('option[value="' + syncState.pageNum + '"]');
+      if (opt) {
+        const clean = opt.textContent.replace(/\s✎$/, '');
+        opt.textContent = val.trim() ? (clean + ' ✎') : clean;
+      }
+    });
+
+    syncCopyNotesBtn.addEventListener('click', async () => {
+      const notes = loadSyncNotes(syncState.subject);
+      const entries = Object.entries(notes).map(([k, text]) => {
+        const m = k.match(/^w(\d+)s(\d+)$/);
+        return m ? { w: Number(m[1]), s: Number(m[2]), text: text.trim() } : null;
+      }).filter(Boolean).sort((a, b) => (a.w - b.w) || (a.s - b.s));
+
+      if (!entries.length) {
+        syncCopyNotesBtn.textContent = 'No notes yet';
+        setTimeout(() => updateSyncNotesUI(), 1400);
+        return;
+      }
+      const out = ['## Slide Suggestions — ' + syncState.subject, '']
+        .concat(entries.map(e => '### Week ' + e.w + ' — Slide ' + e.s + '\n' + e.text))
+        .join('\n\n');
+      try {
+        await navigator.clipboard.writeText(out);
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = out;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+      syncCopyNotesBtn.textContent = 'Copied!';
+      setTimeout(() => updateSyncNotesUI(), 1800);
+      syncCopyNotesBtn.blur();
+    });
+
+    syncClearNotesBtn.addEventListener('click', () => {
+      const notes = loadSyncNotes(syncState.subject);
+      const count = Object.keys(notes).length;
+      if (!count || !confirm('Clear all ' + count + ' saved slide suggestions for ' + syncState.subject + '?')) return;
+      saveSyncNotes(syncState.subject, {});
+      updateSyncNotesUI();
+      const sf = syncState.slideFiles[syncState.weekIdx];
+      if (sf && syncState.pdfDocs[sf.path]) {
+        const studyMap = syncState.studyCache[syncState.studyFile.path] || {};
+        populateSyncPageSelect(syncState.pdfDocs[sf.path].numPages, studyMap[sf.weekNum] || {});
+      }
+      syncClearNotesBtn.blur();
+    });
+
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(() => {
+        if (!syncPane.classList.contains('active')) return;
+        clearTimeout(syncState.resizeTimer);
+        syncState.resizeTimer = setTimeout(() => { renderSyncCurrent(); }, 120);
+      }).observe(syncSlidePane);
+    }
+
     /* --- View Switching --- */
     function showPane(pane) {
-      [overviewPane, mdPane, pdfPane].forEach(p => p.classList.remove('active'));
+      [overviewPane, mdPane, pdfPane, syncPane].forEach(p => p.classList.remove('active'));
       pane.classList.add('active');
       const isMd = pane === mdPane;
       progressTrack.classList.toggle('visible', isMd);
       if (!isMd) progressBeam.style.transform = 'scaleX(0)';
+      updateSlideSyncButton();
     }
 
     function showOverview() {
@@ -2897,6 +3524,7 @@
         history.replaceState(null, '', window.location.pathname + window.location.search);
       }
       showPane(overviewPane);
+      updateSlideSyncButton();
       renderSidebarAndGrid(searchInput.value);
     }
 
@@ -2905,6 +3533,7 @@
       mdAudioBtn.disabled = true;
       const reqId = ++openFileSeq;
       activeFile = file;
+      updateSlideSyncButton();
       breadcrumb.innerHTML = `${escapeHtml(file.subject)} / ${escapeHtml(file.group)} / <strong>${escapeHtml(file.title)}</strong>`;
       const encodedUrl = './' + encodePath(file.path);
       const isPdf = file.type === 'pdf' || /\.pdf$/i.test(file.path);
@@ -2994,6 +3623,22 @@
           return;
         }
       }
+      if (syncPane.classList.contains('active') && !audioOpen && !isTyping && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+          e.preventDefault();
+          stepSyncSlide(1);
+          return;
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          e.preventDefault();
+          stepSyncSlide(-1);
+          return;
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          const back = syncState.returnFile || syncState.studyFile;
+          if (back) openFile(back); else showOverview();
+          return;
+        }
+      }
       if ((e.key === '/' && !isTyping) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) {
         e.preventDefault();
         if (sidebar.classList.contains('collapsed')) sidebar.classList.remove('collapsed');
@@ -3023,6 +3668,7 @@
       updateThemeButton();
       renderTimer();
       manifestData = await loadManifest();
+      updateSlideSyncButton();
       initOffline();
       renderSidebarAndGrid('');
       const fromHash = resolveHash();
