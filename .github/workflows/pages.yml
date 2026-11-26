@@ -42,7 +42,7 @@ jobs:
             const lower = filename.toLowerCase();
             if (lower === "study.md") return "Study Guide";
             if (lower === "quiz.md") return "Quiz Guide";
-            const base = filename.replace(/\.md$/i, "");
+            const base = filename.replace(/\.(md|pdf)$/i, "");
             return base
               .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
               .replace(/[-_]+/g, " ")
@@ -65,7 +65,7 @@ jobs:
               const full = path.join(dir, entry.name);
               if (entry.isDirectory()) {
                 walkSubject(full, subjectName, groupMap);
-              } else if (/\.md$/i.test(entry.name)) {
+              } else if (/\.(md|pdf)$/i.test(entry.name)) {
                 const relFromRoot = path.relative(root, full).split(path.sep).join("/");
                 const relFromSubject = path.relative(path.join(root, subjectName), full).split(path.sep);
                 const groupName = relFromSubject.length > 1 ? relFromSubject.slice(0, -1).join(" / ") : "General";
@@ -74,7 +74,7 @@ jobs:
                   title: humanizeTitle(entry.name),
                   name: entry.name,
                   path: relFromRoot,
-                  type: "md"
+                  type: /\.pdf$/i.test(entry.name) ? "pdf" : "md"
                 });
               }
             }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-25T21:39:00+07:00",
+  "generatedAt": "2026-11-26T03:41:57.594Z",
   "subjects": [
     {
       "name": "Software Architecture",
@@ -24,6 +24,53 @@
               "name": "TeachersNode.md",
               "path": "Software Architecture/Midterm/TeachersNode.md",
               "type": "md"
+            }
+          ]
+        },
+        {
+          "name": "Slides",
+          "files": [
+            {
+              "title": "Week 01 Slides",
+              "name": "Week 01 Slides.pdf",
+              "path": "Software Architecture/Slides/Week 01 Slides.pdf",
+              "type": "pdf"
+            },
+            {
+              "title": "Week 02 Slides",
+              "name": "Week 02 Slides.pdf",
+              "path": "Software Architecture/Slides/Week 02 Slides.pdf",
+              "type": "pdf"
+            },
+            {
+              "title": "Week 03 Slides",
+              "name": "Week 03 Slides.pdf",
+              "path": "Software Architecture/Slides/Week 03 Slides.pdf",
+              "type": "pdf"
+            },
+            {
+              "title": "Week 04 Slides",
+              "name": "Week 04 Slides.pdf",
+              "path": "Software Architecture/Slides/Week 04 Slides.pdf",
+              "type": "pdf"
+            },
+            {
+              "title": "Week 05 Slides",
+              "name": "Week 05 Slides.pdf",
+              "path": "Software Architecture/Slides/Week 05 Slides.pdf",
+              "type": "pdf"
+            },
+            {
+              "title": "Week 06 Slides",
+              "name": "Week 06 Slides.pdf",
+              "path": "Software Architecture/Slides/Week 06 Slides.pdf",
+              "type": "pdf"
+            },
+            {
+              "title": "Week 07 Slides",
+              "name": "Week 07 Slides.pdf",
+              "path": "Software Architecture/Slides/Week 07 Slides.pdf",
+              "type": "pdf"
             }
           ]
         }

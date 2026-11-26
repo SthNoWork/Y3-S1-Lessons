@@ -9,7 +9,8 @@
   - **Silent tag pills & non-spoken notes**: `.qa-tag-row`/`.qa-tag-pill` rendered in `<summary>` from `data-tag` + `data-meta` + `data-review`; stripped from TTS (`extractCardAudioData`). Elements with `data-no-audio` inside `<details>` are skipped by `collectBlocks()` (no hardcoded text filters).
 - `sw.js`: service worker (network-first, cache-fallback, active only while cache `study-hub-offline-v1` exists). Handles `CACHE_ALL` / `CLEAR_CACHE` messages from `#offlineBtn`; serves cached `index.html` for offline navigations so page reloads work offline (needs HTTPS/GitHub Pages or localhost; not `file://`).
 - `manifest.json`: auto-indexed `.md` tree.
-- `.github/workflows/pages.yml`: on push to `main`/`master`, scans subject folders for `.md` (`study.md` → `quiz.md` → alphabetical), regenerates `manifest.json`, deploys Pages.
+- `.github/workflows/pages.yml`: on push to `main`/`master`, scans subject folders for `.md` and `.pdf` (`study.md` → `quiz.md` → alphabetical), regenerates `manifest.json`, deploys Pages.
+- `#pdfPane` / `#pdfFrame` in `index.html`: renders `.pdf` slides inline (with `Open PDF` topbar link and offline caching via `sw.js`).
 - `Software Architecture/Midterm/quiz.md`: Quick-reference tables + 7 sections (`## Section 1 — Week 1: …` .. `## Section 7 — Week 7: …`), 74 cards `Question N.M:` (points/`Teacher Highlight` in `data-meta`).
 - `Software Architecture/Midterm/study.md`: Master brief + 9 sections: `Section 1` Suggested (`Question 1.1`–`1.12`, `Why likely` wrapped in `<p data-no-audio>`), `Sections 2–8` Weeks 1–7 (split single-topic cards `Question 2.1`–`8.6` with `**Key takeaway:**` first), Practical Templates, `Section 9` Mock Midterm (`Question 9.1`–`9.10`).
 - `Software Architecture/Midterm/TeachersNode.md`: exam specs (Fri 27 Nov 2026, ~10 open questions, no QCM, 30% grade, 60% theory "explain" / 40% practical, Weeks 1–7).
