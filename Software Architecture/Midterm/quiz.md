@@ -4,15 +4,83 @@
 > **Exam Blueprint (`TeachersNode.md`):** Friday **27 November 2026** · Paper-based · **~10 open questions** · **NO QCM** · Worth **30%** · **60% Theory & Concept** (*"Explain…"* only, no *"What is…"*, e.g., Transactional Outbox) · **40% Practical** (e.g., Week 5/6 Event Storming) · Lectures **1 to 7**.
 > Every multiple-choice item from Quizzes 1–7 below has been converted into an open **"Explain why / how…"** question using the exact instructor explanations and rubrics.
 
+---
+
+## Course Overview — What is Software System Architecture?
+
+Software System Architecture (Bass, Clements & Kazman) is **"the set of structures needed to reason about the system: elements, their relations, and the properties of both."** Think of it as the **blueprint of a skyscraper**—showing steel beams, elevators, and weight limits rather than the colour of paint on the wall.
+
+> [!NOTE]
+> **The Core Dilemma:** Any junior programmer can write code that delivers a feature. Software architecture is about how the system is structured so it does not crash under 100,000 users, does not leak payment data, does not take three weeks to change one button, and can survive a server catching fire.
+
+### 6 Core Ideas Behind the Subject
+
+1. **Structure Drives Quality Attributes:** Almost any structure can deliver features, but *only specific structures* achieve target speed, availability, security, and maintainability.
+2. **Hard-to-Change Decisions & Context-Driven Trade-offs:** Architecture covers system-wide choices that are expensive to reverse (events vs direct calls, monolith vs microservices). Every gain trades off against another quality or cost, guided by team size, deadline, budget, and scale.
+3. **Boundaries & Decoupling:** Keep related rules cohesive inside clear boundaries (Ports & Adapters, DDD Bounded Contexts) with small interfaces and Anti-Corruption Layers isolating external systems.
+4. **Organization Mirrors System (Conway's Law):** Systems mirror the communication structure of the teams building them. Small teams start cleanly with a **Modular Monolith** and split only when coordination or uneven load demands it.
+5. **Design for Failure Over Unreliable Networks:** Packets drop, servers crash, and retries duplicate requests—so resilient systems rely on **stateless replicas**, **idempotency keys**, timeouts/circuit breakers, **async events**, **Sagas**, **Dead-Letter Queues**, and the **Transactional Outbox**.
+6. **Make Architecture Visible & Measurable:** Replace vague adjectives (*"fast, available"*) with 6-part **Quality Attribute Scenarios**, back-of-the-envelope math, **C4 & Sequence diagrams**, and **immutable ADRs**.
+
+### 7-Week Course Arc
+
+| Week | Topic | Core Question Answered |
+| :--- | :--- | :--- |
+| **Week 1** | Intro to Software Architecture | What qualities and constraints drive the structure, and what trade-offs must we accept? |
+| **Week 2** | Designing & Documenting | How do we estimate scale (QPS, storage) and document structures (C4, Sequence, ADRs)? |
+| **Week 3** | Networking & Communication | How do DNS, TCP/QUIC, TLS 1.3, HTTP/2–3, reverse proxies, and CDNs move traffic safely? |
+| **Week 4** | Web Concepts & API Design | How do we design REST/gRPC/GraphQL APIs, auth (Sessions vs JWT), CORS, and idempotent retries? |
+| **Week 5** | Monolith, Layered & Modular | How do we keep one deployable clean using Modular Monoliths and Hexagonal Ports & Adapters? |
+| **Week 6** | Microservices & DDD | How do we discover Bounded Contexts (Event Storming) and decide when to split services? |
+| **Week 7** | Event-Driven & Messaging | How do RabbitMQ, Kafka, Sagas, DLQs, CQRS/Event Sourcing, and Outbox keep async flows reliable? |
+
+### The FoodHub Case Study (Used Across All Quizzes)
+
+- **Actors:** **Customers** (browse dishes, order, pay with KHQR), **Restaurants** (accept/reject, cook), **Riders** (pick up, deliver), and **Admin/Support**.
+- **6 Subsystems / Modules:** `Catalog` (menus), `Ordering`, `Payment`, `Delivery / Riders`, `Notifications` (SMS), and `Analytics`.
+- **4 Recurring Exam Lenses:** Every quiz tests how parts **talk** (sync HTTP vs async events), where **data lives** (one DB vs DB-per-service), how **failure is handled** (retries, DLQs, Sagas), and how we measure **speed and uptime**.
+
+```mermaid
+flowchart LR
+  subgraph DRV["1. Architectural Drivers"]
+    F["Functional (Features)"]
+    Q["Quality Attributes (Speed, Uptime, Security)"]
+    C["Constraints (Team, Time, KHQR)"]
+  end
+
+  DRV -->|"Decisions & Trade-offs"| FH
+
+  subgraph FH["2. FoodHub System (6 Subsystems)"]
+    CAT["Catalog"]
+    ORD["Ordering"]
+    PAY["Payment"]
+    DEL["Delivery / Riders"]
+    NOT["Notifications"]
+    ANA["Analytics"]
+  end
+
+  FH -->|"4 Recurring Exam Lenses"| LENS
+
+  subgraph LENS["3. Core Architecture Questions"]
+    L1["Sync HTTP vs Async Events"]
+    L2["Shared DB vs DB-per-Service"]
+    L3["Retries, Outbox & Sagas"]
+    L4["QPS, Latency & 99.9% Uptime"]
+  end
+```
+
+---
+
 ## Quick-Reference Formula & Comparison Sheet
 
 ### Back-of-the-Envelope & Availability Numbers
 
 | Metric | Formula / Calculation | Result |
 | :--- | :--- | :--- |
-| **99.9% Monthly Downtime** | `30 × 24 × 60 = 43,200 min` → `0.1% × 43,200` | **≈ 43 min/month** |
+| **99.9% ("Three Nines") Downtime** | `30 × 24 × 60 = 43,200 min` → `0.1% × 43,200` | **≈ 43 min/month** |
+| **99.99% ("Four Nines") Downtime** | `0.01% × 43,200 min` | **≈ 4.3 min/month** |
 | **Serial Chain Availability** | 3 services in sequence at `99.9%`: `0.999³` | **≈ 0.997 (99.7%)** |
-| **Average & Peak QPS** | `1,000,000 req/day ÷ 86,400 s/day` | **≈ 11.6 → ~12 req/s** |
+| **Average & Peak QPS** | `1,000,000 req/day ÷ 86,400 s/day` *(mental math: `~100,000 s/day`)* | **≈ 11.6 → ~12 req/s** |
 | **Ride-Hailing Sizing (W2 Q11)** | `500,000 rides/day ÷ 86,400` · Peak `×4` · Storage `× 1 KB × 365` | **5.8 rides/s avg · 23/s peak · 180 GB/yr** |
 | **Latency Hierarchy** | Fastest → Slowest (W2 Q8 key) | **RAM ~100 ns < In-DC RTT ~0.5 ms < SSD 1 MB ~1 ms < PNH–SIN ~30–50 ms** |
 
@@ -47,10 +115,25 @@
 
 | Dimension | RabbitMQ | Kafka |
 | :--- | :--- | :--- |
+| **Model** | Smart Broker / Dumb Consumer (exchanges → queues). | Append-Only Distributed Commit Log (topics + partitions). |
 | **Message Lifetime** | Deletes message upon consumer acknowledgement. | Appends to log; keeps messages until retention period ends (consumers commit offsets). |
 | **Ordering** | Per-queue ordering. | Guaranteed **within a partition** (use a key such as `orderId`). |
 | **Replay** | Not designed for replay once acked. | Consumers/groups can reset offsets and replay historical events. |
 | **Typical Use & FoodHub Fit** | Task queues (competing consumers) and flexible routing; simple to operate at low volume. | Event streaming, multiple independent consumer groups, and analytics replay. |
+
+### 5. HTTP Status Codes Cheat Sheet
+
+| Code | Meaning | When Used |
+| :--- | :--- | :--- |
+| **`200 OK`** | Standard success | `GET` / `PATCH` / `PUT` (or cached `Idempotency-Key` replay) |
+| **`201 Created`** | Resource created | Successful `POST` creating a new entity (e.g., `POST /v1/orders`) |
+| **`204 No Content`** | Success, empty body | Successful `DELETE` removing a resource |
+| **`400 Bad Request`** | Client validation error | Wrong field type, missing field, malformed JSON |
+| **`401 Unauthorized`** | Unauthenticated | Missing, expired, or invalid token/session |
+| **`403 Forbidden`** | Unauthorized | Valid login, but user lacks permission |
+| **`404 Not Found`** | Missing resource | Unknown ID or route |
+| **`409 Conflict`** | State / uniqueness conflict | Duplicate review or illegal order state transition |
+| **`500 Internal Server Error`** | Server crash | Unhandled backend exception |
 
 ---
 
@@ -164,7 +247,7 @@ By contrast, Moore's Law is transistor doubling every two years, and Brooks's La
 <details data-tag="theory">
 <summary><strong>Question 1.9:</strong> Explain the architectural trade-off FoodHub faces when deciding whether to reject orders when restaurant stock data might be stale or accept them and fix problems later.</summary>
 
-This is a trade-off between **consistency and availability**: rejecting uncertain orders prioritises consistency first, whereas accepting orders and resolving issues later prioritises availability first.
+This is a trade-off between **consistency and availability** (CAP Theorem): rejecting uncertain orders prioritises consistency first, whereas accepting orders and resolving issues later prioritises availability first.
 
 </details>
 
@@ -198,7 +281,9 @@ This is a trade-off between **consistency and availability**: rejecting uncertai
 <details data-tag="practical" data-meta="3 pts">
 <summary><strong>Question 1.12:</strong> Name one trade-off FoodHub faces (e.g., performance vs freshness, cost vs availability, usability vs security, or time-to-market vs maintainability). State which side you choose and why.</summary>
 
-**Example (Cost vs Availability):** Running a second active data centre improves availability but doubles infrastructure cost and operational complexity. For FoodHub's early stage in one region, choose **lower cost with single-region multi-AZ backups** because budget and an 8-developer team cannot sustain multi-region active-active operations yet.
+**Example 1 (Cost vs Availability):** Running a second active data centre improves availability but doubles infrastructure cost and operational complexity. For FoodHub's early stage in one region, choose **lower cost with single-region multi-AZ backups** because budget and an 8-developer team cannot sustain multi-region active-active operations yet.
+
+**Example 2 (Rider GPS Freshness vs Battery & Bandwidth):** Reporting GPS every 1 s gives ultra-fresh tracking but drains budget Android rider batteries over 8-hour shifts and spikes ingress; every 30 s feels jerky. Choose **dynamic 5–10 s updates while moving (paused when stopped)**.
 
 **Rubric (3 pts):** 1 pt real conflict between two qualities; 1 pt choosing a side; 1 pt reason tied to FoodHub's users, numbers, or constraints.
 
@@ -358,21 +443,21 @@ sequenceDiagram
 <details data-tag="theory">
 <summary><strong>Question 3.1:</strong> Explain why <code>192.168.1.20</code> is a private IPv4 address while <code>8.8.8.8</code>, <code>203.0.113.10</code>, and <code>1.1.1.1</code> are public.</summary>
 
-`192.168.0.0/16` is a reserved private IPv4 range used inside local networks (requiring NAT to reach the internet), whereas the others are globally routable public addresses.
+`192.168.0.0/16` is one of the three RFC 1918 reserved private IPv4 ranges (`10.0.0.0/8`, `172.16.0.0/12` i.e. `172.16–31.x`, and `192.168.0.0/16`) used inside local networks (requiring NAT to reach the internet), whereas the others are globally routable public addresses.
 
 </details>
 
 <details data-tag="theory">
 <summary><strong>Question 3.2:</strong> Explain how UDP differs from TCP in connection setup, delivery guarantees, and ordering.</summary>
 
-**UDP** sends packets without a connection (no three-way handshake) and provides best-effort delivery with no automatic retransmission or ordering guarantees. Reliability and ordering are **TCP's** job.
+**UDP** sends packets without a connection (no 3-way `SYN → SYN-ACK → ACK` handshake) and provides best-effort delivery with no automatic retransmission or ordering guarantees. Reliability and ordering are **TCP's** job.
 
 </details>
 
 <details data-tag="theory">
 <summary><strong>Question 3.3:</strong> Explain how HTTP/2 improves on HTTP/1.1, and how HTTP/3 changes the underlying transport.</summary>
 
-**HTTP/2** introduces **multiplexing** so many requests and responses share one TCP connection simultaneously without changing HTTP semantics.
+**HTTP/2** introduces **multiplexing** and **HPACK** header compression so many requests and responses share one TCP connection simultaneously without changing HTTP semantics.
 
 **HTTP/3** runs on top of **QUIC (which uses UDP)**, providing built-in reliability and TLS 1.3 while avoiding TCP head-of-line blocking.
 
@@ -389,7 +474,7 @@ The server's certificate **proves the server's identity** (authentication), wher
 <summary><strong>Question 3.5:</strong> Explain what a DNS TTL of 3,600 means and what a CNAME record is used for.</summary>
 
 - **TTL = 3,600:** Cache lifetime in seconds—DNS resolvers may cache the record for up to 1 hour (3,600 s) before querying again.
-- **CNAME record:** Maps one domain name to another domain name (for example, pointing a subdomain to a CDN host).
+- **A vs CNAME record:** An **`A` record** maps a domain name directly to an IPv4 address (`foodhub.com.kh → 203.0.113.5`), whereas a **`CNAME` record** maps one domain name to another domain name (for example, pointing a subdomain to a CDN host).
 
 </details>
 
@@ -420,7 +505,7 @@ Menu photos are **public, large, and rarely changing**, making them ideal for ed
 <summary><strong>Question 3.9:</strong> List, in order, the four main steps between a customer typing <code>foodhub.com.kh</code> and receiving the HTML. Name the protocol for each step.</summary>
 
 1. **DNS lookup** of `foodhub.com.kh` to obtain its IP address (**DNS**, usually UDP port 53).
-2. **Open transport connection** to the IP on port 443 (**TCP**, or **QUIC over UDP** for HTTP/3).
+2. **Open transport connection** to the IP on port 443 (**TCP** 3-way `SYN → SYN-ACK → ACK` handshake, or **QUIC over UDP** for HTTP/3).
 3. **TLS handshake** for ECDHE key agreement and certificate verification (**TLS 1.3**).
 4. **Send HTTP request and receive HTML** (**HTTP/1.1, HTTP/2, or HTTP/3**).
 
@@ -444,7 +529,7 @@ Menu photos are **public, large, and rarely changing**, making them ideal for ed
 
 - **Why:** The TCP connection to the backend originates from the reverse proxy (`172.18.0.3`), so the backend sees the proxy's IP.
 - **Fix:** The proxy attaches `X-Forwarded-For` (or `X-Real-IP` / `Forwarded`) with the client IP, and the backend reads that header.
-- **Security risk:** Clients can forge HTTP headers, so the backend must **only trust the header when the request comes from its own proxy** (and the proxy must overwrite, not blindly append, untrusted incoming values).
+- **Security risk:** Clients can forge HTTP headers to spoof their IP and bypass IP bans or rate limits, so the backend must **only trust the header when the request comes from its own proxy** (and the proxy must overwrite, not blindly append, untrusted incoming values).
 
 **Rubric (3 pts):** 1 pt proxy TCP IP; 1 pt forwarded header; 1 pt spoofing risk + trusting only own proxy / overwriting untrusted values.
 
@@ -475,7 +560,7 @@ sequenceDiagram
 <details data-tag="theory">
 <summary><strong>Question 4.1:</strong> Explain how the <code>HttpOnly</code> cookie flag limits XSS damage compared with <code>Secure</code>, <code>SameSite</code>, or <code>Max-Age</code>.</summary>
 
-`HttpOnly` prevents browser JavaScript from reading the cookie via `document.cookie`, so an XSS script cannot exfiltrate the session token directly.
+`HttpOnly` prevents browser JavaScript from reading the cookie via `document.cookie`, so an XSS script cannot exfiltrate the session token directly. By contrast, `Secure` sends cookies only over HTTPS, and `SameSite` controls cross-site sending (`Strict`/`Lax` block most CSRF; `None` sends cross-site and requires `Secure`).
 
 </details>
 
@@ -483,7 +568,7 @@ sequenceDiagram
 <summary><strong>Question 4.2:</strong> Explain the main weakness of a self-contained JWT compared with a server-side session, why you must never put secrets in a JWT payload, and how to mitigate revocation.</summary>
 
 - **Revocation weakness:** Any service validating the signature will accept a JWT until it expires, making immediate revocation hard. Mitigate with **short TTL + refresh tokens** or a revocation list.
-- **Payload visibility:** A JWT is **signed (integrity), not encrypted (confidentiality)**—anyone can decode and read the payload, so never store secrets inside it.
+- **Payload visibility:** A JWT has three Base64URL parts (`Header.Payload.Signature`) and is **signed (integrity), not encrypted (confidentiality)**—anyone can decode and read the payload, so never store secrets inside it.
 
 </details>
 
@@ -499,7 +584,7 @@ Type/validation errors are client errors (`400 Bad Request`), not server crashes
 <details data-tag="theory">
 <summary><strong>Question 4.4:</strong> Explain why <code>POST</code> is not idempotent by default whereas <code>GET</code>, <code>PUT</code>, and <code>DELETE</code> are.</summary>
 
-Repeating `GET`, `PUT` (full replace), or `DELETE` leaves the server in the same state after the first call, whereas repeating a `POST` creates another new resource each time unless guarded by an idempotency key.
+Repeating `GET`, `PUT` (full replace), or `DELETE` leaves the server in the same state after the first call, whereas `PATCH` (partial update) is not necessarily idempotent and repeating a `POST` creates another new resource each time unless guarded by an idempotency key.
 
 </details>
 
@@ -557,7 +642,7 @@ Both Protobuf and Avro use typed schemas built for **schema evolution**, allowin
 <details data-tag="practical" data-meta="3 pts">
 <summary><strong>Question 4.11:</strong> A Vue app on <code>http://localhost:5173</code> calls an API on <code>http://localhost:3000</code> and gets "blocked by CORS policy," while <code>curl</code> succeeds. Explain why and give the server fix.</summary>
 
-- **Why:** Port `5173` vs `3000` are different origins, triggering the browser's Same-Origin Policy; `curl` ignores CORS because only browsers enforce it.
+- **Why:** `Origin = Protocol + Domain + Port`, so `5173` vs `3000` are different origins, triggering the browser's Same-Origin Policy; `curl` ignores CORS because only browsers enforce it.
 - **Server Fix:** Return `Access-Control-Allow-Origin: http://localhost:5173` (in NestJS: `app.enableCors({ origin: 'http://localhost:5173', credentials: true })`), and never use `*` when cookies/credentials are sent.
 
 **Rubric (3 pts):** 1 pt different origins (port); 1 pt browser-only enforcement vs curl; 1 pt explicit allow-origin header / NestJS config without `*` for credentials.
@@ -590,8 +675,20 @@ Calls between parts are fast, reliable **in-process function calls**, and a **si
 <details data-tag="theory">
 <summary><strong>Question 5.2:</strong> Explain the strict layered architecture call rule and why a Vue app + NestJS API + PostgreSQL DB is a 3-tier system.</summary>
 
-- **Strict layering:** Each logical layer (e.g., presentation) may call **only the layer directly below it** (never skipping down to the database directly).
+- **Strict vs Open Layering:** In **strict layering**, each logical layer (e.g., presentation) may call **only the layer directly below it** (never skipping down to the database directly), whereas **open layering** allows a layer to bypass lower layers to call any layer beneath it.
 - **3-tier:** Client (Vue), application server (NestJS), and database (PostgreSQL) are three separately running physical processes/tiers.
+
+```mermaid
+flowchart LR
+  subgraph ST["Strict Layering (Call N-1 Only)"]
+    SP["Presentation"] --> SB["Business"] --> SD["Data Access"]
+  end
+
+  subgraph OP["Open Layering (May Bypass Layers)"]
+    OP1["Presentation"] --> OB["Business"] --> OD["Data Access"]
+    OP1 -.->|"Bypass"| OD
+  end
+```
 
 </details>
 
@@ -609,7 +706,7 @@ In NestJS, listing only `CatalogService` in `exports` enforces this boundary bec
 
 Dependencies always point **inwards from adapters to the core**.
 
-`OrderRepository` is an interface defined/used by the ordering core—so it is an outgoing (**driven**) **port**. The PostgreSQL class that implements it is the driven **adapter**.
+**Driving (incoming) ports** define how the core is triggered (e.g., `CreateOrderUseCase` called by `OrdersController`). `OrderRepository` is an interface defined/used by the ordering core—so it is an outgoing (**driven**) **port**, while `PostgresOrderRepository` is the driven **adapter** implementing it.
 
 </details>
 
@@ -748,7 +845,7 @@ A **2-developer startup** with rapidly changing domain boundaries needs simplici
 <summary><strong>Question 6.8:</strong> Give two benefits and two costs of microservices. For each cost, name one technique or tool that reduces it.</summary>
 
 - **Benefits:** Independent deployments, independent scaling (plus fault isolation, tech choice, team autonomy).
-- **Cost 1 — Network failures / cascading latency:** Mitigate with *timeouts, retries, and circuit breakers*.
+- **Cost 1 — Network failures / cascading latency:** Mitigate with *timeouts, retries with exponential backoff, and circuit breakers* (e.g., Resilience4j).
 - **Cost 2 — Cross-service data consistency:** Mitigate with *sagas and transactional outbox*. *(Other valid pairs: Operations → CI/CD, containers, Kubernetes; Debugging → distributed tracing, central logging; Testing → contract tests.)*
 
 **Rubric (4 pts):** 1 pt two benefits; 1 pt two costs; 2 pts matching mitigations.
@@ -903,9 +1000,37 @@ flowchart LR
 <details data-tag="practical" data-meta="3 pts">
 <summary><strong>Question 7.11:</strong> Explain why "exactly-once delivery" is hard over a network, and what real systems do instead.</summary>
 
-- **Why it is hard:** When an acknowledgement is lost over a network, the sender cannot distinguish between "the message was lost" and "only the ack was lost," so it must either risk losing the message or resend it.
-- **What systems do instead:** Use **at-least-once delivery** (retry until acknowledged) combined with **idempotent consumers** (deduplicating via event IDs / processed-ID tables), achieving *effectively-once processing*.
+- **Why it is hard (Two Generals' Problem):** When an acknowledgement is lost over an unreliable network, the sender cannot distinguish between "the message was lost" and "only the ack was lost," so it must either risk losing the message or resend it.
+- **What systems do instead:** Use **at-least-once delivery** (retry until acknowledged) combined with **idempotent consumers** (deduplicating via event IDs / durable processed-ID tables), achieving *effectively-once processing*.
+
+```mermaid
+sequenceDiagram
+  participant B as Broker
+  participant C as Consumer
+  participant DB as DB (unique eventId)
+  B->>C: "Deliver Event #42"
+  C->>DB: "Save work + eventId #42"
+  C--xB: "ACK lost on network (Two Generals' Problem)"
+  B->>C: "Retry Event #42 (At-least-once)"
+  C->>DB: "Check eventId #42 -> Already exists"
+  Note over C: "Skip duplicate -> Effectively-once"
+```
 
 **Rubric (3 pts):** 1 pt ambiguous lost-ack problem; 1 pt at-least-once resend; 1 pt idempotent consumer deduplication for effectively-once results.
 
 </details>
+
+---
+
+## Final 10-Minute Rapid Review Traps
+
+1. **"Architecture" vs "Design":** Architecture covers high-level structures that are hard to change and drive quality attributes; variable names, button colors, and local loops are detailed design.
+2. **C4 "Container" is NOT Docker:** A C4 container is any separately running or data-storing unit (SPA, API, DB).
+3. **ADRs are Immutable:** Never edit or delete an accepted ADR—write a new ADR that supersedes the old one.
+4. **JWT is NOT Encrypted:** Its three Base64URL parts (`Header.Payload.Signature`) are only signed for integrity; anyone can decode and read the payload.
+5. **CORS is for Browsers:** `Origin = Protocol + Domain + Port`; `curl` and native mobile apps ignore CORS, which only stops cross-origin JS in browsers.
+6. **Command vs Event:** A command is an imperative verb (`ChargeCard`); an event is a past-tense immutable fact (`CardCharged`).
+7. **RabbitMQ vs Kafka:** RabbitMQ is a smart broker that deletes messages after ACK; Kafka is a permanent append-only commit log with consumer offsets and replayability.
+8. **Exactly-Once Myth:** Because of the Two Generals' Problem, true exactly-once delivery over unreliable networks is impossible—use **at-least-once delivery + idempotent consumers** for *effectively-once* processing.
+9. **Hexagonal Dependencies Point INWARD:** The domain core defines interfaces (**Ports**); outer technology implements them (**Adapters**).
+10. **Database-Per-Service:** Shared databases create hidden coupling and destroy microservice independence; share foreign data via API calls, creation-time denormalization, or async event read caches.
