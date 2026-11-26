@@ -1194,11 +1194,30 @@
       font: inherit; font-size: 13.5px; line-height: 1.45;
     }
     #syncNoteInput:focus { outline: none; border-color: var(--accent); }
-    #slideSyncBtn.is-active, #syncSkipEmptyBtn.is-active, #syncExpandBtn.is-active, #syncCopyNotesBtn.has-notes {
+    #syncPane.qa-collapsed .sync-split { grid-template-columns: 1fr; }
+    #syncPane.qa-collapsed .sync-qa-pane { display: none; }
+    #syncPane.qa-collapsed .sync-slide-pane { border-right: none; border-bottom: none; }
+    .sync-note-title-input {
+      width: 100%; height: 32px; padding: 0 10px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--text);
+      font: inherit; font-size: 13px;
+    }
+    .sync-note-title-input:focus { outline: none; border-color: var(--accent); }
+    .sync-notes-actions { display: flex; align-items: center; gap: 6px; }
+    details.sync-user-note { border-left: 3px solid var(--amber); }
+    details.sync-user-note.is-editing { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .sync-note-body { white-space: pre-wrap; margin: 6px 0 8px; line-height: 1.55; }
+    .sync-note-card-actions {
+      display: flex; justify-content: flex-end; gap: 6px;
+      margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border);
+    }
+    .qa-tag-pill.tag-note { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
+    #slideSyncBtn.is-active, #syncToggleQaBtn.is-active, #syncSkipEmptyBtn.is-active, #syncExpandBtn.is-active, #syncCopyNotesBtn.has-notes {
       background: var(--accent-soft); color: var(--accent); border-color: var(--accent);
     }
     @media (max-width: 900px) {
       .sync-split { grid-template-columns: 1fr; grid-template-rows: 42vh minmax(0, 1fr); }
+      #syncPane.qa-collapsed .sync-split { grid-template-rows: 1fr; }
       .sync-slide-pane { border-right: none; border-bottom: 1px solid var(--border); padding: 8px; }
     }
 
@@ -1326,10 +1345,11 @@
               <button class="ctrl-btn" id="syncNextBtn" type="button" title="Next slide (→)">Next ▶</button>
             </div>
             <div class="sync-bar-right">
+              <button class="ctrl-btn" id="syncToggleQaBtn" type="button" title="Collapse or expand the questions &amp; notes panel">Hide Q&amp;A</button>
               <button class="ctrl-btn" id="syncSkipEmptyBtn" type="button" title="Skip title/divider slides with no questions">Skip empty</button>
               <button class="ctrl-btn" id="syncExpandBtn" type="button" title="Always expand answers across all slides">Auto-expand</button>
-              <button class="ctrl-btn" id="syncCopyNotesBtn" type="button" title="Copy all slide suggestions as Markdown">Copy Notes (0)</button>
-              <button class="ctrl-btn" id="syncClearNotesBtn" type="button" title="Clear all saved suggestions" style="display:none;">Clear</button>
+              <button class="ctrl-btn" id="syncCopyNotesBtn" type="button" title="Copy all slide notes as Markdown">Copy Notes (0)</button>
+              <button class="ctrl-btn" id="syncClearNotesBtn" type="button" title="Clear all saved notes" style="display:none;">Clear</button>
             </div>
           </div>
           <div class="sync-split">
@@ -1347,10 +1367,14 @@
               </div>
               <div class="sync-notes-box">
                 <div class="sync-notes-head">
-                  <strong id="syncNoteLabel">Suggestion for Week 1 · Slide 1</strong>
-                  <span id="syncNoteStatus">Auto-saved locally</span>
+                  <strong id="syncNoteLabel">Add Note — Week 1 · Slide 1</strong>
+                  <div class="sync-notes-actions">
+                    <button class="ctrl-btn" id="syncNoteCancelBtn" type="button" style="display:none;">Cancel</button>
+                    <button class="ctrl-btn" id="syncNoteSaveBtn" type="button">+ Add Note</button>
+                  </div>
                 </div>
-                <textarea id="syncNoteInput" rows="3" placeholder="Type what to add, clarify, or fix for this slide… then click Copy Notes to send all feedback back."></textarea>
+                <input class="sync-note-title-input" id="syncNoteTitle" type="text" placeholder="Note title (optional)…" />
+                <textarea id="syncNoteInput" rows="2" placeholder="Write a note for this slide… (Ctrl+Enter to save)"></textarea>
               </div>
             </div>
           </div>
@@ -3007,6 +3031,7 @@
     const syncPrevBtn = document.getElementById('syncPrevBtn');
     const syncPageSelect = document.getElementById('syncPageSelect');
     const syncNextBtn = document.getElementById('syncNextBtn');
+    const syncToggleQaBtn = document.getElementById('syncToggleQaBtn');
     const syncSkipEmptyBtn = document.getElementById('syncSkipEmptyBtn');
     const syncExpandBtn = document.getElementById('syncExpandBtn');
     const syncCopyNotesBtn = document.getElementById('syncCopyNotesBtn');
@@ -3019,7 +3044,9 @@
     const syncQaCount = document.getElementById('syncQaCount');
     const syncQaList = document.getElementById('syncQaList');
     const syncNoteLabel = document.getElementById('syncNoteLabel');
-    const syncNoteStatus = document.getElementById('syncNoteStatus');
+    const syncNoteTitle = document.getElementById('syncNoteTitle');
+    const syncNoteSaveBtn = document.getElementById('syncNoteSaveBtn');
+    const syncNoteCancelBtn = document.getElementById('syncNoteCancelBtn');
     const syncNoteInput = document.getElementById('syncNoteInput');
 
     if (window.pdfjsLib) {
@@ -3035,6 +3062,8 @@
       pageNum: 1,
       skipEmpty: lsGet('study-sync-skip-empty', '0') === '1',
       autoExpand: lsGet('study-sync-auto-expand', '0') === '1',
+      hideQa: lsGet('study-sync-hide-qa', '0') === '1',
+      editingNoteId: null,
       studyCache: {},
       pdfDocs: {},
       renderTask: null,
@@ -3158,7 +3187,21 @@
     }
 
     function loadSyncNotes(subject) {
-      try { return JSON.parse(lsGet(getSyncNotesKey(subject), '{}')) || {}; } catch (e) { return {}; }
+      try {
+        const raw = JSON.parse(lsGet(getSyncNotesKey(subject), '{}')) || {};
+        const norm = {};
+        for (const [k, v] of Object.entries(raw)) {
+          if (typeof v === 'string') {
+            if (v.trim()) norm[k] = [{ id: 'n_' + k, title: '', body: v.trim(), updatedAt: Date.now() }];
+          } else if (Array.isArray(v)) {
+            const list = v.filter(x => x && (String(x.body || '').trim() || String(x.title || '').trim()));
+            if (list.length) norm[k] = list;
+          }
+        }
+        return norm;
+      } catch (e) {
+        return {};
+      }
     }
 
     function saveSyncNotes(subject, notes) {
@@ -3169,18 +3212,38 @@
       return 'w' + weekNum + 's' + pageNum;
     }
 
+    function countAllSyncNotes(notes) {
+      return Object.values(notes).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
+    }
+
+    function applySyncQaVisibility() {
+      syncPane.classList.toggle('qa-collapsed', syncState.hideQa);
+      syncToggleQaBtn.classList.toggle('is-active', syncState.hideQa);
+      syncToggleQaBtn.textContent = syncState.hideQa ? 'Show Q&A' : 'Hide Q&A';
+    }
+
+    function resetNoteComposer() {
+      syncState.editingNoteId = null;
+      syncNoteTitle.value = '';
+      syncNoteInput.value = '';
+      syncNoteCancelBtn.style.display = 'none';
+      syncNoteSaveBtn.textContent = '+ Add Note';
+      syncQaList.querySelectorAll('details.sync-user-note.is-editing').forEach(el => el.classList.remove('is-editing'));
+      const sf = syncState.slideFiles[syncState.weekIdx];
+      if (sf) {
+        syncNoteLabel.textContent = 'Add Note — Week ' + sf.weekNum + ' · Slide ' + syncState.pageNum;
+      }
+    }
+
     function updateSyncNotesUI() {
       const notes = loadSyncNotes(syncState.subject);
-      const count = Object.keys(notes).length;
+      const count = countAllSyncNotes(notes);
       syncCopyNotesBtn.textContent = 'Copy Notes (' + count + ')';
       syncCopyNotesBtn.classList.toggle('has-notes', count > 0);
       syncClearNotesBtn.style.display = count > 0 ? 'inline-flex' : 'none';
       const sf = syncState.slideFiles[syncState.weekIdx];
-      if (sf) {
-        const key = syncNoteId(sf.weekNum, syncState.pageNum);
-        syncNoteLabel.textContent = 'Suggestion for Week ' + sf.weekNum + ' · Slide ' + syncState.pageNum;
-        syncNoteInput.value = notes[key] || '';
-        syncNoteStatus.textContent = notes[key] ? 'Saved locally' : 'Auto-saved locally';
+      if (sf && !syncState.editingNoteId) {
+        syncNoteLabel.textContent = 'Add Note — Week ' + sf.weekNum + ' · Slide ' + syncState.pageNum;
       }
     }
 
@@ -3203,7 +3266,8 @@
         const opt = document.createElement('option');
         opt.value = String(p);
         const qCount = (weekMap && weekMap[p]) ? weekMap[p].length : 0;
-        const hasNote = !!notes[syncNoteId(sf.weekNum, p)];
+        const noteArr = notes[syncNoteId(sf.weekNum, p)];
+        const hasNote = !!(noteArr && noteArr.length);
         let label = 'Slide ' + p + ' / ' + numPages;
         if (qCount > 0) label += ' · ' + qCount + (qCount === 1 ? ' Q' : ' Qs');
         if (hasNote) label += ' ✎';
@@ -3213,26 +3277,45 @@
       syncPageSelect.value = String(syncState.pageNum);
     }
 
-    function renderSyncQuestions(weekMap) {
+    function renderSyncQuestions(weekMap, openNoteId = null) {
       const sf = syncState.slideFiles[syncState.weekIdx];
       const cards = (weekMap && weekMap[syncState.pageNum]) || [];
+      const notes = loadSyncNotes(syncState.subject);
+      const slideNotes = notes[syncNoteId(sf.weekNum, syncState.pageNum)] || [];
+
       syncQaTitle.textContent = 'Week ' + sf.weekNum + ' · Slide ' + syncState.pageNum;
-      syncQaCount.textContent = cards.length + (cards.length === 1 ? ' question' : ' questions');
+      let countLabel = cards.length + (cards.length === 1 ? ' question' : ' questions');
+      if (slideNotes.length > 0) countLabel += ' · ' + slideNotes.length + (slideNotes.length === 1 ? ' note' : ' notes');
+      syncQaCount.textContent = countLabel;
       syncQaScroll.scrollTop = 0;
 
       if (typeof mermaid !== 'undefined') {
         mermaid.initialize({ startOnLoad: false, theme: getTheme() === 'dark' ? 'dark' : 'neutral', securityLevel: 'loose' });
       }
-      if (cards.length === 0) {
+
+      const noteCards = slideNotes.map(n => {
+        const rawHeading = n.title || (n.body || '').split(/\r?\n/)[0].slice(0, 90);
+        const bodyText = n.body || n.title || '';
+        return '<details class="sync-user-note" data-tag="note" data-meta="Slide ' + sf.pageNum + '" data-sync-section="Week ' + sf.weekNum + ' · My Notes" data-note-id="' + escapeHtml(n.id) + '">' +
+          '<summary><strong>Note:</strong> ' + escapeHtml(rawHeading) + '</summary>' +
+          '<div class="sync-note-body">' + escapeHtml(bodyText) + '</div>' +
+          '<div class="sync-note-card-actions" data-no-audio>' +
+            '<button class="ctrl-btn" type="button" data-note-action="edit">Edit</button>' +
+            '<button class="ctrl-btn" type="button" data-note-action="delete">Delete</button>' +
+          '</div>' +
+        '</details>';
+      });
+
+      if (cards.length === 0 && noteCards.length === 0) {
         const hasNext = syncState.pageNum < (syncState.pdfDocs[sf.path] ? syncState.pdfDocs[sf.path].numPages : syncState.pageNum) ||
           syncState.weekIdx < syncState.slideFiles.length - 1;
-        syncQaList.innerHTML = '<div class="sync-empty"><div>No questions on this slide (title or divider slide).</div>' +
+        syncQaList.innerHTML = '<div class="sync-empty"><div>No questions or notes on this slide yet.</div>' +
           (hasNext ? '<button class="ctrl-btn" id="syncEmptyNextBtn" type="button">Next slide ▶</button>' : '') +
           '</div>';
         const btn = document.getElementById('syncEmptyNextBtn');
         if (btn) btn.addEventListener('click', () => stepSyncSlide(1));
       } else {
-        syncQaList.innerHTML = cards.join('');
+        syncQaList.innerHTML = cards.join('') + noteCards.join('');
         syncQaList.querySelectorAll('details').forEach((det, idx) => {
           det.addEventListener('toggle', () => {
             if (!det.open) return;
@@ -3240,7 +3323,15 @@
               if (!b.getAttribute('data-mermaid-rendered')) renderMermaidBox(b, 's-' + idx + '-' + j);
             });
           });
-          if (syncState.autoExpand) det.open = true;
+          const nid = det.getAttribute('data-note-id');
+          if (syncState.autoExpand || (openNoteId && nid === openNoteId)) det.open = true;
+          if (nid) {
+            if (syncState.editingNoteId === nid) det.classList.add('is-editing');
+            const editBtn = det.querySelector('[data-note-action="edit"]');
+            const delBtn = det.querySelector('[data-note-action="delete"]');
+            if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); startEditNote(nid); });
+            if (delBtn) delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteSyncNote(nid); });
+          }
         });
       }
       rebuildAudioDeck();
@@ -3267,6 +3358,7 @@
       if (seq !== syncState.renderSeq) return;
 
       const weekMap = studyMap[sf.weekNum] || {};
+      resetNoteComposer();
       updateSyncNotesUI();
 
       try {
@@ -3336,8 +3428,10 @@
           pNum = prevDoc.numPages;
         }
         const targetSf = syncState.slideFiles[wIdx];
+        const notes = loadSyncNotes(syncState.subject);
+        const hasNote = !!(notes[syncNoteId(targetSf.weekNum, pNum)] && notes[syncNoteId(targetSf.weekNum, pNum)].length);
         const hasQ = !!(studyMap[targetSf.weekNum] && studyMap[targetSf.weekNum][pNum] && studyMap[targetSf.weekNum][pNum].length);
-        if (!syncState.skipEmpty || hasQ) {
+        if (!syncState.skipEmpty || hasQ || hasNote) {
           syncState.weekIdx = wIdx;
           syncState.pageNum = pNum;
           await renderSyncCurrent();
@@ -3376,6 +3470,7 @@
       pdfFrame.src = 'about:blank';
       mdOutline.classList.add('hidden');
       populateSyncWeekSelect();
+      applySyncQaVisibility();
       syncSkipEmptyBtn.classList.toggle('is-active', syncState.skipEmpty);
       syncExpandBtn.classList.toggle('is-active', syncState.autoExpand);
       showPane(syncPane);
@@ -3429,32 +3524,103 @@
       syncExpandBtn.blur();
     });
 
-    syncNoteInput.addEventListener('input', () => {
+    function refreshSyncPageAndList(openNoteId = null) {
+      const sf = syncState.slideFiles[syncState.weekIdx];
+      if (!sf) return;
+      const studyMap = syncState.studyCache[syncState.studyFile.path] || {};
+      const weekMap = studyMap[sf.weekNum] || {};
+      renderSyncQuestions(weekMap, openNoteId);
+      if (syncState.pdfDocs[sf.path]) {
+        populateSyncPageSelect(syncState.pdfDocs[sf.path].numPages, weekMap);
+      }
+      updateSyncNotesUI();
+    }
+
+    function saveCurrentNote() {
+      const sf = syncState.slideFiles[syncState.weekIdx];
+      if (!sf) return;
+      const title = syncNoteTitle.value.trim();
+      const body = syncNoteInput.value.trim();
+      if (!title && !body) {
+        syncNoteInput.focus();
+        return;
+      }
+      const notes = loadSyncNotes(syncState.subject);
+      const key = syncNoteId(sf.weekNum, syncState.pageNum);
+      const list = notes[key] ? notes[key].slice() : [];
+      let savedId = syncState.editingNoteId;
+      if (savedId) {
+        const idx = list.findIndex(n => n.id === savedId);
+        if (idx >= 0) {
+          list[idx] = { ...list[idx], title, body, updatedAt: Date.now() };
+        } else {
+          list.push({ id: savedId, title, body, updatedAt: Date.now() });
+        }
+      } else {
+        savedId = 'n_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        list.push({ id: savedId, title, body, updatedAt: Date.now() });
+      }
+      notes[key] = list;
+      saveSyncNotes(syncState.subject, notes);
+      resetNoteComposer();
+      refreshSyncPageAndList(savedId);
+    }
+
+    function startEditNote(noteId) {
+      const sf = syncState.slideFiles[syncState.weekIdx];
+      if (!sf) return;
+      const notes = loadSyncNotes(syncState.subject);
+      const list = notes[syncNoteId(sf.weekNum, syncState.pageNum)] || [];
+      const item = list.find(n => n.id === noteId);
+      if (!item) return;
+      syncState.editingNoteId = noteId;
+      syncNoteTitle.value = item.title || '';
+      syncNoteInput.value = item.body || '';
+      syncNoteCancelBtn.style.display = 'inline-flex';
+      syncNoteSaveBtn.textContent = 'Update Note';
+      syncNoteLabel.textContent = 'Editing Note — Week ' + sf.weekNum + ' · Slide ' + syncState.pageNum;
+      syncQaList.querySelectorAll('details.sync-user-note').forEach(el => {
+        el.classList.toggle('is-editing', el.getAttribute('data-note-id') === noteId);
+      });
+      syncNoteInput.focus();
+    }
+
+    function deleteSyncNote(noteId) {
       const sf = syncState.slideFiles[syncState.weekIdx];
       if (!sf) return;
       const notes = loadSyncNotes(syncState.subject);
       const key = syncNoteId(sf.weekNum, syncState.pageNum);
-      const val = syncNoteInput.value;
-      if (val.trim()) notes[key] = val;
+      const next = (notes[key] || []).filter(n => n.id !== noteId);
+      if (next.length) notes[key] = next;
       else delete notes[key];
       saveSyncNotes(syncState.subject, notes);
-      const count = Object.keys(notes).length;
-      syncCopyNotesBtn.textContent = 'Copy Notes (' + count + ')';
-      syncCopyNotesBtn.classList.toggle('has-notes', count > 0);
-      syncClearNotesBtn.style.display = count > 0 ? 'inline-flex' : 'none';
-      syncNoteStatus.textContent = val.trim() ? 'Saved locally' : 'Cleared';
-      const opt = syncPageSelect.querySelector('option[value="' + syncState.pageNum + '"]');
-      if (opt) {
-        const clean = opt.textContent.replace(/\s✎$/, '');
-        opt.textContent = val.trim() ? (clean + ' ✎') : clean;
-      }
+      if (syncState.editingNoteId === noteId) resetNoteComposer();
+      refreshSyncPageAndList();
+    }
+
+    syncToggleQaBtn.addEventListener('click', () => {
+      syncState.hideQa = !syncState.hideQa;
+      lsSet('study-sync-hide-qa', syncState.hideQa ? '1' : '0');
+      applySyncQaVisibility();
+      syncToggleQaBtn.blur();
+    });
+
+    syncNoteSaveBtn.addEventListener('click', () => { saveCurrentNote(); syncNoteSaveBtn.blur(); });
+    syncNoteCancelBtn.addEventListener('click', () => { resetNoteComposer(); syncNoteCancelBtn.blur(); });
+    [syncNoteTitle, syncNoteInput].forEach(inp => {
+      inp.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          saveCurrentNote();
+        }
+      });
     });
 
     syncCopyNotesBtn.addEventListener('click', async () => {
       const notes = loadSyncNotes(syncState.subject);
-      const entries = Object.entries(notes).map(([k, text]) => {
+      const entries = Object.entries(notes).map(([k, list]) => {
         const m = k.match(/^w(\d+)s(\d+)$/);
-        return m ? { w: Number(m[1]), s: Number(m[2]), text: text.trim() } : null;
+        return (m && Array.isArray(list) && list.length) ? { w: Number(m[1]), s: Number(m[2]), list } : null;
       }).filter(Boolean).sort((a, b) => (a.w - b.w) || (a.s - b.s));
 
       if (!entries.length) {
@@ -3462,9 +3628,11 @@
         setTimeout(() => updateSyncNotesUI(), 1400);
         return;
       }
-      const out = ['## Slide Suggestions — ' + syncState.subject, '']
-        .concat(entries.map(e => '### Week ' + e.w + ' — Slide ' + e.s + '\n' + e.text))
-        .join('\n\n');
+      const blocks = entries.map(e => {
+        const lines = e.list.map(n => n.title ? ('- **' + n.title + ':** ' + (n.body || '')) : ('- ' + (n.body || '')));
+        return '### Week ' + e.w + ' — Slide ' + e.s + '\n' + lines.join('\n');
+      });
+      const out = ['## Slide Notes — ' + syncState.subject, '', ...blocks].join('\n\n');
       try {
         await navigator.clipboard.writeText(out);
       } catch (e) {
@@ -3482,15 +3650,11 @@
 
     syncClearNotesBtn.addEventListener('click', () => {
       const notes = loadSyncNotes(syncState.subject);
-      const count = Object.keys(notes).length;
-      if (!count || !confirm('Clear all ' + count + ' saved slide suggestions for ' + syncState.subject + '?')) return;
+      const count = countAllSyncNotes(notes);
+      if (!count || !confirm('Clear all ' + count + ' saved slide notes for ' + syncState.subject + '?')) return;
       saveSyncNotes(syncState.subject, {});
-      updateSyncNotesUI();
-      const sf = syncState.slideFiles[syncState.weekIdx];
-      if (sf && syncState.pdfDocs[sf.path]) {
-        const studyMap = syncState.studyCache[syncState.studyFile.path] || {};
-        populateSyncPageSelect(syncState.pdfDocs[sf.path].numPages, studyMap[sf.weekNum] || {});
-      }
+      resetNoteComposer();
+      refreshSyncPageAndList();
       syncClearNotesBtn.blur();
     });
 
