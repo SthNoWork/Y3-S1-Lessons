@@ -54,6 +54,28 @@
 
 ---
 
+## Hard Vocabulary & Software Engineering Decoder
+
+| Term | Plain-English Meaning | FoodHub Example |
+| :--- | :--- | :--- |
+| **Idempotent / Idempotency** | Running the same request or event 2+ times gives the **exact same final result** as running it once (no duplicate orders or double charges). | `POST /v1/orders` with `Idempotency-Key` returns the existing order on retry; consumer checks `eventId` in DB before acting. |
+| **Stateless vs Stateful** | **Stateless:** server forgets you after each request (you send a token every time). **Stateful:** server remembers you in memory/session. | Stateless API replicas scale easily behind a load balancer; an in-memory `SESSIONS` Map breaks on restart or across 3 servers. |
+| **Cohesion vs Coupling** | **High cohesion:** things that change together live together. **Loose coupling:** modules depend only on small, stable interfaces. | All order rules live in `OrderingModule` (high cohesion), which talks to `CatalogService` instead of `CatalogRepository` (loose coupling). |
+| **Temporal Coupling** | Two services are tied in time: if Service B is slow or down right now, Service A fails too. | Sync REST chain `Ordering → Payment → Delivery` fails if any one service goes down (`0.999³ ≈ 99.7%`). |
+| **Eventual Consistency** | Data across services isn't updated in the same millisecond, but catches up shortly after via events. | Ordering updates its local read model a moment after Catalog emits `RestaurantRenamed`. |
+| **Head-of-Line (HoL) Blocking** | One delayed/lost packet in a single TCP connection freezes all other requests sharing that connection. | HTTP/2 over TCP stalls all streams on 4G packet loss; HTTP/3 (QUIC/UDP) stalls only the one lost stream. |
+| **Reverse Proxy & Upstream** | **Reverse proxy** sits in front of servers (TLS, routing, hiding ports); **upstream** is the backend app behind it. | nginx on `:443` forwards to upstream NestJS on `:3000`; if NestJS crashes, nginx returns `502 Bad Gateway`. |
+| **Bounded Context** | A business boundary where words and models have one clear meaning. | `"Order"` in Ordering = items/prices/discounts; `"Order"` in Delivery = pickup/drop-off/rider/ETA. |
+| **Ubiquitous Language** | One shared vocabulary used by both business people and developers in meetings, diagrams, and code. | Everyone says `OrderPlaced` and `OrderAccepted` rather than mixing "ticket", "cart", and "job". |
+| **Anti-Corruption Layer (ACL)** | A translator/adapter that converts messy external API formats into your own clean domain model. | Payment adapter maps bank/KHQR numeric error codes into FoodHub's `PaymentAuthorised` / `PaymentFailed`. |
+| **Dual-Write Problem** | Writing to a DB and publishing to a message broker are two separate actions—if one succeeds and the other crashes, data goes out of sync. | Order is saved in Postgres, then process crashes before RabbitMQ receives `OrderPlaced`. |
+| **Transactional Outbox & CDC** | Save the domain row + an `outbox` event row in **one local DB transaction**, then a relay or **CDC** (Change Data Capture, e.g., Debezium reading DB logs) publishes it. | Guarantees `OrderPlaced` is never lost without needing 2PC. |
+| **Compensating Action (Saga)** | An "undo" business action run when a later step in a multi-service flow fails (since you can't roll back another service's DB). | Restaurant rejects after payment → Payment emits `RefundIssued` to undo the charge. |
+| **CQRS & Event Sourcing** | **CQRS:** separate write model from fast read models. **Event Sourcing:** store every change as an immutable event and replay to get current state (+ snapshots for speed). | Payment ledger stores every charge/refund event; a projection builds a fast Restaurant Dashboard table. |
+| **DLX / DLQ & Prefetch** | **DLX/DLQ:** Dead-Letter Exchange/Queue where poison messages go for inspection. **Prefetch:** max unacked messages a worker holds (backpressure). | `ch.nack(msg, false, false)` sends bad JSON to `orders.dlx → kitchen.dlq`; `prefetch=1` stops 1 worker from hoarding all jobs. |
+
+---
+
 ## Section 1 — Week 1: Introduction to Software Architecture
 
 Covers: what architecture is and why it matters; requirements vs quality attributes vs constraints; measurable quality attribute scenarios; trade-offs.

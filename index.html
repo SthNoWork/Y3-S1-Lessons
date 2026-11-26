@@ -1116,6 +1116,8 @@
     .ctrl-btn.is-offline-saved { border-color: var(--emerald); color: var(--emerald); background: var(--emerald-soft); }
     .ctrl-btn.is-flagged { border-color: var(--amber); color: var(--amber); background: var(--amber-soft); }
     .filter-btn.is-active[data-filter="review"] { border-color: var(--amber); color: var(--amber); background: var(--amber-soft); }
+    .section-filter-select { max-width: 230px; width: auto; }
+    .md-section.hidden-by-section, .md-section.hidden-by-done { display: none !important; }
 
     @media (max-width: 820px) {
       .audio-settings { margin-left: 0; }
@@ -1216,6 +1218,8 @@
             <div class="md-toolbar" id="mdToolbar">
               <div class="md-toolbar-left">
                 <span class="mastery-pill" id="masteryCount" style="display:none;">0 / 0 mastered</span>
+                <select class="search-input section-filter-select" id="mdSectionFilter" style="display:none;" title="Focus on one section at a time"></select>
+                <button class="ctrl-btn" id="mdHideDoneBtn" type="button" style="display:none;" title="Hide sections marked done">Hide done</button>
                 <div class="filter-bar" id="mdFilterBar" style="display:none;"></div>
               </div>
               <div class="md-toolbar-right">
@@ -1258,6 +1262,7 @@
         <button class="ctrl-btn" id="audioReviewBtn" type="button" title="Flag for review (M)">☆ Review</button>
       </div>
       <div class="audio-settings">
+        <button class="ctrl-btn" id="audioShuffleBtn" type="button" title="Shuffle question order (S)">Shuffle</button>
         <button class="ctrl-btn" id="audioRecallBtn" type="button" title="Pause before the answer">Recall: 0s</button>
         <select class="search-input" id="audioRateSelect" title="Speed">
           <option value="0.8">0.8x</option>
@@ -1271,7 +1276,7 @@
         <select class="search-input" id="audioVoiceSelect" title="Voice"></select>
       </div>
     </div>
-    <div class="audio-hints">↑/↓ Q · Shift+↑/↓ Section · ←/→ Bullet · Space Play/Pause · Enter Q↔A · R Replay · M Review · Esc Close</div>
+    <div class="audio-hints">↑/↓ Q · Shift+↑/↓ Section · ←/→ Bullet · Space Play/Pause · Enter Q↔A · R Replay · M Review · S Shuffle · Esc Close</div>
   </div>
 
   <script>
@@ -1298,6 +1303,8 @@
     const mdToolbar = document.getElementById('mdToolbar');
     const masteryCount = document.getElementById('masteryCount');
     const mdFilterBar = document.getElementById('mdFilterBar');
+    const mdSectionFilter = document.getElementById('mdSectionFilter');
+    const mdHideDoneBtn = document.getElementById('mdHideDoneBtn');
     const mdExpandBtn = document.getElementById('mdExpandBtn');
     const mdCollapseBtn = document.getElementById('mdCollapseBtn');
     const mdResetBtn = document.getElementById('mdResetBtn');
@@ -1840,6 +1847,7 @@
         btn.className = 'check-btn';
         const setMasteredState = (isDone) => {
           sec.classList.toggle('is-mastered', isDone);
+          sec.classList.toggle('hidden-by-done', hideDoneSections && isDone);
           btn.classList.toggle('done', isDone);
           btn.textContent = isDone ? 'Mastered' : 'Mark done';
           const outLink = outlineList.querySelector(`[data-target="${sid}"]`);
@@ -1852,9 +1860,33 @@
           saveMasteredSet(filePath, mastered);
           setMasteredState(next);
           updateMasteryUI();
+          rebuildAudioDeck();
         });
         h2.appendChild(btn);
       });
+
+      mdSectionFilter.innerHTML = '';
+      if (sections.length > 1) {
+        const allOpt = document.createElement('option');
+        allOpt.value = 'all';
+        allOpt.textContent = 'All sections (' + sections.length + ')';
+        mdSectionFilter.appendChild(allOpt);
+        sections.forEach(sec => {
+          const h2 = sec.querySelector('h2');
+          if (!h2) return;
+          const opt = document.createElement('option');
+          opt.value = h2.id;
+          const label = h2.childNodes[0] ? h2.childNodes[0].textContent.trim() : h2.textContent.trim();
+          opt.textContent = label;
+          mdSectionFilter.appendChild(opt);
+        });
+        mdSectionFilter.value = 'all';
+        mdSectionFilter.style.display = 'inline-block';
+      } else {
+        mdSectionFilter.style.display = 'none';
+      }
+      mdHideDoneBtn.style.display = sections.length > 0 ? 'inline-flex' : 'none';
+      mdHideDoneBtn.classList.toggle('is-active', hideDoneSections);
 
       headings.forEach(h => {
         const li = document.createElement('li');
@@ -1990,6 +2022,7 @@
     const audioNextSec = document.getElementById('audioNextSec');
     const audioReplayBtn = document.getElementById('audioReplayBtn');
     const audioReviewBtn = document.getElementById('audioReviewBtn');
+    const audioShuffleBtn = document.getElementById('audioShuffleBtn');
     const offlineBtn = document.getElementById('offlineBtn');
 
     let audioDeck = [];
@@ -2175,12 +2208,26 @@
           }
         }
       });
-      const visible = all.filter(d => !d.classList.contains('hidden-by-filter'));
+      const visible = all.filter(d => {
+        if (d.classList.contains('hidden-by-filter')) return false;
+        const sec = d.closest('.md-section');
+        if (sec && (sec.classList.contains('hidden-by-section') || sec.classList.contains('hidden-by-done'))) return false;
+        return true;
+      });
       audioDeck = visible.map((d, i) => {
         const c = extractCardAudioData(d, i + 1);
         c.reviewKey = keyForDetails(d);
         return c;
       });
+      if (audioShuffle && audioDeck.length > 1) {
+        const keepItem = prevEl ? audioDeck.find(c => c.el === prevEl) : null;
+        const rest = keepItem ? audioDeck.filter(c => c !== keepItem) : audioDeck.slice();
+        for (let i = rest.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [rest[i], rest[j]] = [rest[j], rest[i]];
+        }
+        audioDeck = keepItem ? [keepItem, ...rest] : rest;
+      }
       mdAudioBtn.disabled = audioDeck.length === 0;
       const keep = prevEl ? audioDeck.findIndex(c => c.el === prevEl) : -1;
       cardIdx = keep >= 0 ? keep : 0;
@@ -2464,6 +2511,38 @@
     /* --- Audiobook extras: review flags, bookmark, media keys, section jump, replay --- */
     let reviewSet = new Set();
     let activeFilter = 'all';
+    let audioShuffle = false;
+    let hideDoneSections = lsGet('study-hide-done', '0') === '1';
+
+    function toggleShuffle() {
+      audioShuffle = !audioShuffle;
+      audioShuffleBtn.classList.toggle('is-active', audioShuffle);
+      playChime('section');
+      rebuildAudioDeck();
+    }
+
+    mdSectionFilter.addEventListener('change', () => {
+      const target = mdSectionFilter.value;
+      mdContent.querySelectorAll('.md-section').forEach(sec => {
+        const h2 = sec.querySelector(':scope > h2');
+        const id = h2 ? h2.id : '';
+        sec.classList.toggle('hidden-by-section', target !== 'all' && id !== target);
+      });
+      mdScroll.scrollTop = 0;
+      rebuildAudioDeck();
+      mdSectionFilter.blur();
+    });
+
+    mdHideDoneBtn.addEventListener('click', () => {
+      hideDoneSections = !hideDoneSections;
+      lsSet('study-hide-done', hideDoneSections ? '1' : '0');
+      mdHideDoneBtn.classList.toggle('is-active', hideDoneSections);
+      mdContent.querySelectorAll('.md-section').forEach(sec => {
+        sec.classList.toggle('hidden-by-done', hideDoneSections && sec.classList.contains('is-mastered'));
+      });
+      rebuildAudioDeck();
+      mdHideDoneBtn.blur();
+    });
 
     function keyForDetails(d) {
       const s = d.querySelector(':scope > summary');
@@ -2699,7 +2778,7 @@
 
     const audioActions = [
       [audioPrevSec, () => jumpSection(-1)], [audioNextSec, () => jumpSection(1)],
-      [audioReplayBtn, replayCurrent], [audioReviewBtn, toggleReviewCurrent],
+      [audioReplayBtn, replayCurrent], [audioReviewBtn, toggleReviewCurrent], [audioShuffleBtn, toggleShuffle],
       [audioPrevQ, goPrevQuestion], [audioPrevLine, stepBackLine], [audioPlayBtn, togglePlayPause],
       [audioNextLine, stepForwardLine], [audioNextQ, goNextQuestion], [audioToggleSection, toggleSection],
       [audioCloseBtn, closeAudioDock]
@@ -2835,7 +2914,8 @@
             ArrowDown: goNextQuestion, ArrowUp: goPrevQuestion,
             ArrowRight: stepForwardLine, ArrowLeft: stepBackLine,
             Enter: toggleSection, Escape: closeAudioDock,
-            r: replayCurrent, R: replayCurrent, m: toggleReviewCurrent, M: toggleReviewCurrent
+            r: replayCurrent, R: replayCurrent, m: toggleReviewCurrent, M: toggleReviewCurrent,
+            s: toggleShuffle, S: toggleShuffle
           };
           fn = map[e.key];
         }
