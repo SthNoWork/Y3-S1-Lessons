@@ -867,12 +867,14 @@
       border-radius: 8px;
       padding: 16px;
       margin: 16px 0;
-      overflow: hidden;
+      overflow-x: auto;
       display: flex;
       justify-content: center;
       max-width: 100%;
     }
     .md-mermaid-box svg { max-width: 100%; height: auto; }
+    .md-mermaid-box.is-wide { justify-content: flex-start; }
+    .md-mermaid-box.is-wide svg { max-width: none; flex-shrink: 0; }
 
     .es-board {
       background: var(--surface-raised);
@@ -1348,6 +1350,23 @@
       try {
         const { svg } = await mermaid.render('md-mmd-' + Date.now() + '-' + idx, src);
         box.innerHTML = svg;
+        const svgEl = box.querySelector('svg');
+        const vb = svgEl && svgEl.viewBox && svgEl.viewBox.baseVal;
+        const w = vb && vb.width ? vb.width : parseFloat(svgEl && svgEl.getAttribute('width')) || 0;
+        const h = vb && vb.height ? vb.height : parseFloat(svgEl && svgEl.getAttribute('height')) || 0;
+        const avail = Math.max(box.clientWidth - 32, 320);
+        const fitScale = w ? avail / w : 1;
+        const fitHeight = h * fitScale;
+        if (svgEl && w > avail && (fitScale < 0.75 || (h >= 180 && fitHeight < 180))) {
+          const targetW = Math.min(w, Math.max(Math.round(w * 0.75), h >= 180 ? Math.round((180 / h) * w) : 0));
+          svgEl.style.maxWidth = 'none';
+          svgEl.style.width = targetW + 'px';
+          svgEl.style.height = 'auto';
+          svgEl.removeAttribute('height');
+          box.classList.add('is-wide');
+        } else {
+          box.classList.remove('is-wide');
+        }
         box.setAttribute('data-mermaid-rendered', '1');
       } catch (err) {
         box.innerHTML = '<pre><code>' + escapeHtml(src) + '</code></pre>';

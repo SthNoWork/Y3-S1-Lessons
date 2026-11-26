@@ -40,7 +40,7 @@ Software System Architecture (Bass, Clements & Kazman) is **"the set of structur
 - **4 Recurring Exam Lenses:** Every question asks how these parts **communicate** (sync HTTP vs async events), where **data lives** (single DB vs DB-per-service), how **failures are handled** (retries, DLQs, Sagas), and how we measure **speed and uptime** (latency, QPS, availability).
 
 ```mermaid
-flowchart LR
+flowchart TD
   subgraph DRV["1. Architectural Drivers"]
     F["Functional (Features)"]
     Q["Quality Attributes (Speed, Uptime, Security)"]
