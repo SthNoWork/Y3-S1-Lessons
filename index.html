@@ -622,7 +622,7 @@
 
     .qa-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
       gap: 12px;
       align-items: start;
       margin: 12px 0 18px 0;
@@ -1335,22 +1335,41 @@
       themeToggle.textContent = getTheme() === 'dark' ? 'Light mode' : 'Dark mode';
     }
 
-    async function renderMermaidInMd() {
+    async function renderMermaidBox(box, idx) {
       if (typeof mermaid === 'undefined') return;
+      const src = box.getAttribute('data-mermaid-src');
+      if (!src) return;
+      try {
+        const { svg } = await mermaid.render('md-mmd-' + Date.now() + '-' + idx, src);
+        box.innerHTML = svg;
+        box.setAttribute('data-mermaid-rendered', '1');
+      } catch (err) {
+        box.innerHTML = '<pre><code>' + escapeHtml(src) + '</code></pre>';
+      }
+    }
+
+    async function renderMermaidInMd() {
       if (typeof mermaid === 'undefined') return;
       const theme = getTheme() === 'dark' ? 'dark' : 'neutral';
       mermaid.initialize({ startOnLoad: false, theme, securityLevel: 'loose' });
       const boxes = mdContent.querySelectorAll('.md-mermaid-box');
       for (let i = 0; i < boxes.length; i++) {
         const box = boxes[i];
-        const src = box.getAttribute('data-mermaid-src');
-        if (!src) continue;
-        try {
-          const { svg } = await mermaid.render('md-mmd-' + Date.now() + '-' + i, src);
-          box.innerHTML = svg;
-        } catch (err) {
-          box.innerHTML = '<pre><code>' + escapeHtml(src) + '</code></pre>';
+        box.removeAttribute('data-mermaid-rendered');
+        const det = box.closest('details');
+        if (det && !det.open) {
+          if (!det.hasAttribute('data-mermaid-hooked')) {
+            det.setAttribute('data-mermaid-hooked', '1');
+            det.addEventListener('toggle', () => {
+              if (!det.open) return;
+              det.querySelectorAll('.md-mermaid-box').forEach((b, j) => {
+                if (!b.getAttribute('data-mermaid-rendered')) renderMermaidBox(b, 't-' + j);
+              });
+            });
+          }
+          continue;
         }
+        await renderMermaidBox(box, i);
       }
     }
 
@@ -2127,7 +2146,8 @@
         }
         if (child.nodeType !== 1) continue;
         const tag = child.tagName;
-        if (tag === 'SUMMARY' || child.hasAttribute('data-no-audio')) continue;
+        if (tag === 'SUMMARY' || child.hasAttribute('data-no-audio') ||
+            child.classList.contains('md-mermaid-box') || child.classList.contains('es-board')) continue;
         if (tag === 'UL' || tag === 'OL' || tag === 'DIV' || tag === 'TABLE' || tag === 'TBODY' || tag === 'THEAD' || tag === 'SECTION') {
           collectBlocks(child, out);
         } else if (tag === 'TR') {

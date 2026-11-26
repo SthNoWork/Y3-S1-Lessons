@@ -85,6 +85,38 @@
 - **Bounded Contexts & One Word, Two Meanings:** Group into *Catalog* (`MenuUpdated`), *Ordering* (`OrderPlaced, OrderAccepted, OrderCancelled`), *Payment* (`PaymentAuthorised, RefundIssued`), *Delivery* (`RiderAssigned, OrderPickedUp, OrderDelivered`). Word **"Order"** in Ordering = items, prices, discounts, status; in Delivery = pickup address, drop-off address, rider, ETA.
 - **Context Map (S/A):** Ordering → Catalog (**S**, verify menu/prices or local read model); Ordering ↔ Payment (**A**, `OrderPlaced / PaymentAuthorised`; Payment → KHQR/Bank via **S** + **ACL**); Ordering → Delivery (**A**, `OrderAccepted`).
 
+```event-storming
+context: 1. Catalog
+actor: Restaurant Staff
+command: UpdateMenu
+event: MenuUpdated
+
+context: 2. Ordering
+actor: Customer
+command: PlaceOrder
+event: OrderPlaced / OrderAccepted
+hotspot: "Restaurant never accepts?"
+
+context: 3. Payment
+actor: KHQR / Bank
+command: AuthorisePayment / IssueRefund
+event: PaymentAuthorised / RefundIssued
+hotspot: "Payment settles after timeout?"
+
+context: 4. Delivery
+actor: Rider
+command: AssignRider / DeliverOrder
+event: RiderAssigned -> OrderDelivered
+```
+
+```mermaid
+flowchart LR
+  ORD["Ordering (Order = items, prices)"] -->|"S: Verify menu"| CAT["Catalog"]
+  ORD <-->|"A: OrderPlaced / PaymentAuthorised"| PAY["Payment"]
+  PAY -->|"S: ACL"| KHQR["KHQR / Bank"]
+  ORD -->|"A: OrderAccepted"| DEL["Delivery (Order = pickup, ETA)"]
+```
+
 </details>
 
 <details data-tag="radar theory">
@@ -732,6 +764,32 @@ flowchart LR
 
 - **4 Colors & 5 Steps:** (1) **Orange** = past-tense Domain Event (`OrderPlaced`), (2) Left-to-right **Timeline**, (3) **Blue** = Command (`PlaceOrder`) + **Yellow** = Actor (`Customer`), (4) **Pink** = Hot Spots (risks/conflicts), (5) Group into Bounded Contexts & draw Context Map marking **S** (sync) vs **A** (async).
 
+```event-storming
+context: Ordering
+actor: Customer
+command: PlaceOrder
+event: OrderPlaced
+hotspot: "Restaurant timeout?"
+
+context: Payment
+actor: KHQR
+command: ChargePayment
+event: PaymentAuthorised
+
+context: Delivery
+actor: Rider
+command: AssignRider
+event: RiderAssigned -> OrderDelivered
+```
+
+```mermaid
+flowchart LR
+  ORD["Ordering"] -->|"S: Check menu"| CAT["Catalog"]
+  ORD <-->|"A: OrderPlaced / PaymentAuthorised"| PAY["Payment"]
+  PAY -->|"S: ACL"| KHQR["KHQR / Bank"]
+  ORD -->|"A: OrderAccepted"| DEL["Delivery"]
+```
+
 </details>
 
 <details data-tag="theory">
@@ -995,6 +1053,33 @@ Saving a domain record to a DB and publishing an event to a broker cannot share 
 - **4 Contexts & 1 Word:** *Catalog, Ordering, Payment, Delivery*. "Order" in Ordering = items/prices/discounts; in Delivery = pickup/drop-off/rider/ETA.
 - **Context Map:** Ordering → Catalog (**S**), Ordering ↔ Payment (**A**), Payment → KHQR (**S**, ACL), Ordering → Delivery (**A**).
 
+```event-storming
+context: Ordering
+actor: Customer
+command: PlaceOrder
+event: OrderPlaced / OrderAccepted
+hotspot: "No accept in 5 min?"
+
+context: Payment
+actor: KHQR
+command: AuthorisePayment / IssueRefund
+event: PaymentAuthorised / RefundIssued
+
+context: Delivery
+actor: Rider
+command: AssignRider / Deliver
+event: RiderAssigned -> OrderPickedUp -> OrderDelivered
+hotspot: "Rider cancels after pickup?"
+```
+
+```mermaid
+flowchart LR
+  ORD["Ordering (Order = items, prices)"] -->|"S: Menu check"| CAT["Catalog"]
+  ORD <-->|"A: OrderPlaced / PaymentAuthorised"| PAY["Payment"]
+  PAY -->|"S: ACL"| KHQR["KHQR / Bank"]
+  ORD -->|"A: OrderAccepted"| DEL["Delivery (Order = pickup, ETA)"]
+```
+
 **Rubric (10 pts):** 3 pts 4-color timeline + past-tense events; 2 pts 2 valid hot spots; 2 pts bounded contexts + 1 word/2 meanings; 3 pts Context Map with S/A + ACL.
 
 </details>
@@ -1004,6 +1089,14 @@ Saving a domain record to a DB and publishing an event to a broker cannot share 
 
 - **ADR:** *Decision:* Start with a Modular Monolith (with clean module boundaries and repository ports). *Context:* 6 devs, 4-month deadline, 20 QPS, billing needs ACID, no dedicated ops. *Consequences:* (+) Single deployment, in-process calls, single-DB ACID, ready to split later; (−) Single failure domain and shared scaling until modules are extracted.
 - **Saga Events:** Happy path: `OrderPlaced → PaymentAuthorised → OrderAccepted → RiderAssigned → OrderPickedUp → OrderDelivered`. Failure 1: `PaymentFailed → OrderCancelled` + notify. Failure 2: `OrderRejected → RefundIssued → OrderRejected/Cancelled` + notify.
+
+```mermaid
+flowchart LR
+  OP["OrderPlaced"] -->|"Payment OK"| PA["PaymentAuthorised"]
+  OP -->|"Payment Fails"| PF["PaymentFailed -> OrderCancelled"]
+  PA -->|"Accepts"| OA["OrderAccepted"] --> RA["RiderAssigned -> Delivered"]
+  PA -->|"Rejects"| OR["OrderRejected -> RefundIssued"]
+```
 
 **Rubric (10 pts):** 5 pts ADR (all 4 parts + context forces + good/bad consequences); 5 pts Saga happy path + both failure compensations.
 

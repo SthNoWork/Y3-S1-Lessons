@@ -308,6 +308,13 @@ Estimating QPS and storage right after clarifying requirements tells you the sca
 - **Containers + Tech:** (1) Web Front End (`Vue`), (2) Backend API (`NestJS`), (3) Relational Database (`PostgreSQL`) — or Search Engine / Object Storage for book covers.
 - **Protocols:** Front End → Backend API via `HTTPS / JSON`; Backend API → PostgreSQL via `SQL over TCP`.
 
+```mermaid
+flowchart LR
+  U["Customer (Browser)"] -->|"HTTPS"| FE["Web Front End (Vue)"]
+  FE -->|"HTTPS / JSON"| API["Backend API (NestJS)"]
+  API -->|"SQL over TCP"| DB["Relational DB (PostgreSQL)"]
+```
+
 **Rubric (3 pts):** 1 pt for 3 sensible containers; 1 pt for technology on each; 1 pt for a correct protocol between two containers.
 
 </details>
@@ -870,6 +877,14 @@ Sagas do not lock databases across services with two-phase commit; instead, each
 - **Happy path:** `OrderPlaced → PaymentAuthorised → OrderAccepted → RiderAssigned → OrderPickedUp → OrderDelivered`.
 - **Payment fails:** `PaymentFailed` → Ordering marks the order `CANCELLED` and notifies the customer.
 - **Restaurant rejects:** `OrderRejected` → Payment issues a refund (`RefundIssued`) → Ordering marks the order `REJECTED` and notifies the customer.
+
+```mermaid
+flowchart LR
+  OP["OrderPlaced"] -->|"Payment OK"| PA["PaymentAuthorised"]
+  OP -->|"Payment Fails"| PF["PaymentFailed -> CANCELLED"]
+  PA -->|"Accepts"| OA["OrderAccepted"] --> RA["RiderAssigned -> OrderDelivered"]
+  PA -->|"Rejects"| OR["OrderRejected -> RefundIssued -> REJECTED"]
+```
 
 **Rubric (4 pts):** 2 pts happy path (correct order, ≥4 events); 1 pt payment failure compensation; 1 pt restaurant rejection refund compensation.
 
