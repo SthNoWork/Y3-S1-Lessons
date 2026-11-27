@@ -20,6 +20,7 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <style>
     :root,
     [data-theme="light"] {
@@ -1672,7 +1673,7 @@
       if (lower === 'quiz.md' || lower === 'quiz.json') return 'Quiz Guide';
       if (lower === 'what-to-remember.md' || lower === 'what-to-remember.json') return 'What To Remember';
       if (lower === 'questions.json') return 'All Questions';
-      const base = filename.replace(/\.(md|pdf|json)$/i, '')
+      const base = filename.replace(/\.(md|pdf|json|pptx)$/i, '')
         .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
         .replace(/[-_]+/g, ' ')
         .replace(/\s+/g, ' ')
@@ -1717,18 +1718,19 @@
         const segs = item.path.split('/');
         if (segs.length < 2) continue;
         if (segs.some(s => s.startsWith('.'))) continue;
+        if (segs.some(s => s === 'Quiz' || s === 'Quizes' || s === 'Practical' || s === 'Practicals')) continue;
         if (segs.some(s => s.startsWith('_'))) {
           if (/\.(md|mmd)$/i.test(item.path)) assets.push(item.path);
           continue;
         }
-        if (!/\.(md|pdf|json)$/i.test(item.path)) continue;
+        if (!/\.(md|pdf|json|pptx)$/i.test(item.path)) continue;
         const subjectName = segs[0];
         const fileName = segs[segs.length - 1];
         const groupName = segs.length > 2 ? segs.slice(1, -1).join(' / ') : 'General';
         if (!subjectMap.has(subjectName)) subjectMap.set(subjectName, new Map());
         const groupMap = subjectMap.get(subjectName);
         if (!groupMap.has(groupName)) groupMap.set(groupName, []);
-        const type = /\.pdf$/i.test(fileName) ? 'pdf' : (/\.json$/i.test(fileName) ? 'json' : 'md');
+        const type = /\.pdf$/i.test(fileName) ? 'pdf' : (/\.pptx$/i.test(fileName) ? 'pptx' : (/\.json$/i.test(fileName) ? 'json' : 'md'));
         groupMap.get(groupName).push({
           title: humanizeTitle(fileName),
           name: fileName,
@@ -1792,6 +1794,14 @@
     }
 
     /* --- Sidebar & Overview Rendering --- */
+    const collapsedSubjects = new Set((() => {
+      try { return JSON.parse(localStorage.getItem('study-collapsed-subjects') || '[]'); } catch (e) { return []; }
+    })());
+
+    function saveCollapsedSubjects() {
+      try { localStorage.setItem('study-collapsed-subjects', JSON.stringify(Array.from(collapsedSubjects))); } catch (e) {}
+    }
+
     function renderSidebarAndGrid(filterText = '') {
       const q = filterText.trim().toLowerCase();
       sidebarTree.innerHTML = '';
@@ -1816,18 +1826,23 @@
         if (filteredGroups.length === 0) continue;
         matchedSubjects++;
 
+        const isCollapsed = !q && collapsedSubjects.has(subj.name);
         const subjBlock = document.createElement('div');
         subjBlock.className = 'subject-block';
         const subjBtn = document.createElement('button');
         subjBtn.className = 'subject-btn';
         subjBtn.type = 'button';
-        subjBtn.innerHTML = `<span>${escapeHtml(subj.name)}</span><span>▾</span>`;
+        subjBtn.innerHTML = `<span>${escapeHtml(subj.name)}</span><span>${isCollapsed ? '▸' : '▾'}</span>`;
         const groupContainer = document.createElement('div');
+        if (isCollapsed) groupContainer.style.display = 'none';
 
         subjBtn.addEventListener('click', () => {
           const hidden = groupContainer.style.display === 'none';
           groupContainer.style.display = hidden ? 'block' : 'none';
           subjBtn.lastElementChild.textContent = hidden ? '▾' : '▸';
+          if (hidden) collapsedSubjects.delete(subj.name);
+          else collapsedSubjects.add(subj.name);
+          saveCollapsedSubjects();
         });
 
         const card = document.createElement('div');
@@ -3177,6 +3192,7 @@
         'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
         'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
         'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js',
+        'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
         'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap',
         ...allFilesList().map(f => './' + encodePath(f.path)),
         ...(Array.isArray(manifestData.assets) ? manifestData.assets.map(p => './' + encodePath(p)) : [])
@@ -3978,6 +3994,36 @@
       renderSidebarAndGrid(searchInput.value);
     }
 
+    async function buildMarkdownFromPptx(arrayBuffer, file) {
+      if (typeof JSZip === 'undefined') {
+        throw new Error('JSZip failed to load (use Download .pptx in the top bar).');
+      }
+      const zip = await JSZip.loadAsync(arrayBuffer);
+      const slidePaths = Object.keys(zip.files)
+        .filter(k => /^ppt\/slides\/slide\d+\.xml$/i.test(k))
+        .sort((a, b) => parseInt(a.match(/\d+/)[0], 10) - parseInt(b.match(/\d+/)[0], 10));
+      const parser = new DOMParser();
+      const out = [`# ${file.title}`, ''];
+      for (let i = 0; i < slidePaths.length; i++) {
+        const xmlStr = await zip.files[slidePaths[i]].async('string');
+        const doc = parser.parseFromString(xmlStr, 'application/xml');
+        const pNodes = Array.from(doc.getElementsByTagNameNS('*', 'p'));
+        const lines = [];
+        for (const p of pNodes) {
+          const tNodes = Array.from(p.getElementsByTagNameNS('*', 't'));
+          const line = tNodes.map(t => t.textContent || '').join('').replace(/\s+/g, ' ').trim();
+          if (line && lines[lines.length - 1] !== line) lines.push(line);
+        }
+        const heading = lines.length ? lines[0] : `Slide ${i + 1}`;
+        out.push(`## Slide ${i + 1} — ${heading}`, '');
+        for (let j = 1; j < lines.length; j++) {
+          out.push(`- ${lines[j]}`);
+        }
+        out.push('');
+      }
+      return out.join('\n');
+    }
+
     async function openFile(file, pushHash = true) {
       stopAudio();
       mdAudioBtn.disabled = true;
@@ -3987,9 +4033,10 @@
       breadcrumb.innerHTML = `${escapeHtml(file.subject)} / ${escapeHtml(file.group)} / <strong>${escapeHtml(file.title)}</strong>`;
       const encodedUrl = './' + encodePath(file.path);
       const isPdf = file.type === 'pdf' || /\.pdf$/i.test(file.path);
+      const isPptx = file.type === 'pptx' || /\.pptx$/i.test(file.path);
       const isJson = file.type === 'json' || /\.json$/i.test(file.path);
       openTabLink.href = encodedUrl;
-      openTabLink.textContent = isPdf ? 'Open PDF' : (isJson ? 'Raw .json' : 'Raw .md');
+      openTabLink.textContent = isPdf ? 'Open PDF' : (isPptx ? 'Download .pptx' : (isJson ? 'Raw .json' : 'Raw .md'));
       openTabLink.style.display = 'inline-flex';
 
       if (pushHash) {
@@ -4021,15 +4068,22 @@
       try {
         const res = await fetch(encodedUrl);
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        const text = await res.text();
-        if (reqId !== openFileSeq) return;
-        rawMarkdown = text;
-        if (isJson) {
-          const deck = await resolveJsonDeck(JSON.parse(text), file.path);
+        if (isPptx) {
+          const buf = await res.arrayBuffer();
           if (reqId !== openFileSeq) return;
-          mdContent.innerHTML = buildHtmlFromJsonDeck(deck, file.path);
-        } else {
+          rawMarkdown = await buildMarkdownFromPptx(buf, file);
           mdContent.innerHTML = marked.parse(rawMarkdown);
+        } else {
+          const text = await res.text();
+          if (reqId !== openFileSeq) return;
+          rawMarkdown = text;
+          if (isJson) {
+            const deck = await resolveJsonDeck(JSON.parse(text), file.path);
+            if (reqId !== openFileSeq) return;
+            mdContent.innerHTML = buildHtmlFromJsonDeck(deck, file.path);
+          } else {
+            mdContent.innerHTML = marked.parse(rawMarkdown);
+          }
         }
         enhanceMarkdownStructure(file.path);
         await renderMermaidInMd();

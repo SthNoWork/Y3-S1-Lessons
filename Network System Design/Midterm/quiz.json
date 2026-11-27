@@ -1,0 +1,26 @@
+{
+  "title": "Network System Design (SE026) — Practice Quiz Guide (20 Questions)",
+  "blueprint": "**Practice Quiz (`Quiz/quiz.md`):** 20 questions covering Weeks 1–6 (requirements & layers, delay & throughput, HTTP/DNS & sockets, reliable transfer, TCP handshake, byte numbers, windows & congestion avoidance).",
+  "links": [
+    {
+      "label": "Course Overview",
+      "path": "overview.md"
+    },
+    {
+      "label": "Study Guide",
+      "path": "study.json"
+    },
+    {
+      "label": "What To Remember",
+      "path": "what-to-remember.json"
+    },
+    {
+      "label": "All Questions",
+      "path": "questions.json"
+    }
+  ],
+  "source": "questions.json",
+  "filter": {
+    "bank": "quiz"
+  }
+}

@@ -1,0 +1,759 @@
+{
+  "title": "Network System Design (SE026) — All Questions (Weeks 1–7)",
+  "blueprint": "**Exam Blueprint (`Lecture 1, Slide 30` & `Quiz`):** Midterm **30%** · **90-minute paper examination** requiring written answers and working · Covers **Lectures 1–7 & Labs 1–6**.",
+  "links": [
+    {
+      "label": "Course Overview",
+      "path": "overview.md"
+    },
+    {
+      "label": "Study Guide",
+      "path": "study.json"
+    },
+    {
+      "label": "Quiz Guide",
+      "path": "quiz.json"
+    },
+    {
+      "label": "What To Remember",
+      "path": "what-to-remember.json"
+    }
+  ],
+  "sections": [
+    {
+      "week": 1,
+      "title": "Week 1: Network Foundations & Design Requirements",
+      "rememberSlide": "Slide 32",
+      "remember": [
+        "Access points connect Wi-Fi clients to the LAN; switches connect Ethernet devices inside the LAN; routers/default gateways forward IP packets between networks.",
+        "Separate Requirements (user needs), Constraints (fixed limits), Assumptions (need confirmation), and Open questions (unknowns)—never invent capacities or budgets.",
+        "Ping sends ICMP echo probes and measures RTT; a reply proves IP reachability for those probes, not download throughput or application login.",
+        "Local LAN traffic (laptop to local printer) stays inside the LAN, whereas remote traffic (Moodle) crosses the gateway router and ISP."
+      ],
+      "callout": {
+        "type": "IMPORTANT",
+        "text": "**Lab 1 Rule:** Always distinguish your own live connection observation (`ipconfig`/`ip`) from the fictional teaching-building design proposal."
+      }
+    },
+    {
+      "week": 2,
+      "title": "Week 2: Protocol Layers, Performance & Security",
+      "rememberSlide": "Slide 2 & 22",
+      "remember": [
+        "Total nodal delay = d_proc + d_queue + d_trans (L/R) + d_prop (d/s); traffic intensity La/R -> 1 drives queueing delay up.",
+        "End-to-end ideal throughput is limited by the slowest (bottleneck) link along the path.",
+        "5-layer Internet stack: Application -> Transport (Ht, segment) -> Network (Hn, datagram) -> Link (Hl, frame) -> Physical; OSI adds Session and Presentation.",
+        "Routers strip the incoming link frame and build a new frame for the next link while keeping IP source/destination intact (without NAT or tunnels).",
+        "Attacks (sniffing, IP spoofing, DoS) require defenses (authentication, confidentiality/encryption, integrity, VPNs, off-by-default firewalls)."
+      ],
+      "callout": {
+        "type": "TIP",
+        "text": "**Exam Trap:** Even when traffic is encrypted (HTTPS), a packet capture still reveals IP addresses, ports, packet sizes, timing, and DNS/SNI metadata."
+      }
+    },
+    {
+      "week": 3,
+      "title": "Week 3: Application Requirements, HTTP & DNS",
+      "rememberSlide": "Slide 3 & 25",
+      "remember": [
+        "Application endpoints need IP address + transport protocol + port number because many processes share one host.",
+        "HTTP/1.1 and HTTP/2 commonly use TCP; HTTP/3 runs over QUIC (UDP) for per-object stream control and built-in security.",
+        "DNS is a hierarchical distributed database (Root -> TLD -> Authoritative) with local caching governed by TTL.",
+        "DNS A records map names to IPv4; AAAA to IPv6; CNAME to a canonical alias; NS to authoritative name server; MX to mail server.",
+        "DNS resolution, TCP connection, TLS, and HTTP response are separate dependencies; a 200 OK text/html can still be a login form rather than a PDF."
+      ],
+      "callout": {
+        "type": "IMPORTANT",
+        "text": "**Lab 3 Distinction:** Missing resource (`404`) proves the HTTP server responded; stopped server produces a browser connection error with no HTTP status; `127.0.0.1` needs no DNS."
+      }
+    },
+    {
+      "week": 4,
+      "title": "Week 4: TCP and UDP Socket Applications",
+      "rememberSlide": "Slide 3 & 23",
+      "remember": [
+        "Sockets are the door between an application process (controlled by developer) and the OS transport stack.",
+        "TCP (SOCK_STREAM) provides a reliable ordered byte stream—applications must define message framing (e.g., newline '\\n' + recv loop).",
+        "UDP (SOCK_DGRAM) sends discrete datagrams without a handshake, delivery guarantee, or ordering guarantee.",
+        "Ordinary TCP/UDP sockets send plaintext; encryption requires TLS over TCP or QUIC (TLS 1.3) over UDP.",
+        "A server binds a known port (e.g., 127.0.0.1:12000) while clients receive OS-assigned ephemeral ports."
+      ]
+    },
+    {
+      "week": 5,
+      "title": "Week 5: Transport Choices & Reliable Transfer (rdt)",
+      "rememberSlide": "Slide 13 & 41",
+      "remember": [
+        "Transport layer delivers between processes (multiplexing/demultiplexing via ports); network layer delivers between hosts.",
+        "rdt progression: rdt1.0 (ideal) -> rdt2.0 (checksum, ACK/NAK) -> rdt2.1 (0/1 labels for corrupted feedback) -> rdt2.2 (ACK-only) -> rdt3.0 (timer + timeout).",
+        "When an ACK is lost, the receiver has already delivered DATA; on retry it suppresses duplicate delivery and repeats the ACK.",
+        "Stop-and-wait utilisation: T_tx = L/R, Cycle = T_tx + RTT, U = T_tx / Cycle; pipelining keeps multiple packets in flight to fill idle RTT.",
+        "Toy DATA0/ACK0 labels identify whole teaching messages—never confuse them with TCP byte sequence numbers."
+      ],
+      "callout": {
+        "type": "WARNING",
+        "text": "**Exam Trap:** A timeout only proves the expected ACK did not arrive in time—it does NOT prove whether DATA or ACK was lost or merely delayed."
+      }
+    },
+    {
+      "week": 6,
+      "title": "Week 6: TCP Mechanics & Performance Design",
+      "rememberSlide": "Slide 2 & 29",
+      "remember": [
+        "TCP numbers bytes (not segments): Last byte = Seq + Bytes - 1; cumulative ACK = next expected byte (points to first missing byte).",
+        "3-way handshake: SYN (1 seq #) -> SYN-ACK (1 seq #) -> pure ACK (0 seq #); first data starts at ISN + 1.",
+        "TimeoutInterval = EstimatedRTT + 4 * DevRTT; DevRTT smooths RTT variation (beta = 0.25).",
+        "Flow control (rwnd, receiver buffer) protects one receiver; congestion control (cwnd, network path) protects the network.",
+        "Slow Start doubles cwnd (4 -> 8 -> 16 MSS) up to ssthresh; AIMD adds +1 MSS/RTT and halves on loss; window-limited rate approx Window / RTT."
+      ],
+      "callout": {
+        "type": "TIP",
+        "text": "**Lab 6 Rule:** Ideal transfer time = File bits / Bottleneck bit rate (decimal units: 1 MB = 10^6 bytes). Useful throughput = Verified file bits / Elapsed s (invalid hash trials do not count)."
+      }
+    },
+    {
+      "week": 7,
+      "title": "Week 7: Midterm Review & Design Validation",
+      "rememberSlide": "Slide 37",
+      "remember": [
+        "Establish Requirements (confirm with users), Assumptions (measure under stated conditions), and Observations (record exact scope).",
+        "Troubleshoot layer-by-layer: Gateway ping (ICMP) -> DNS lookup -> TCP port test -> HTTP status & content -> account/task test.",
+        "Upgrading a 100 Mbit/s local switch to 1 Gbit/s will not speed up a 20 Mbit/s Internet bottleneck.",
+        "Access control validation must test both allowed users (e.g., office PCs printing) and denied users (e.g., students blocked).",
+        "Never approve a design without representative load/task tests and recording unresolved assumptions."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "study-w1-q1",
+      "bank": "study",
+      "week": 1,
+      "slides": [4, 7],
+      "tag": ["theory"],
+      "meta": ["Concept · Slides 4–7"],
+      "question": "What are the roles of an endpoint, switch, access point, router, and default gateway in a small LAN?",
+      "answer": "**Key takeaway:** Endpoints originate/receive data, APs and switches connect them inside the LAN, and the gateway router forwards IP packets to other networks.\n\n- **Endpoint / host:** A device (laptop, office PC, server) at the start or end of a data exchange.\n- **Access point (AP):** Connects Wi-Fi devices to the LAN.\n- **Switch:** Connects wired devices within a LAN using Ethernet ports.\n- **Router & default gateway:** Forwards IP packets between networks; the default gateway is a host's next router for reaching remote networks."
+    },
+    {
+      "id": "study-w1-q2",
+      "bank": "study",
+      "week": 1,
+      "slides": [8, 9, 10],
+      "tag": ["practical"],
+      "meta": ["Slides 8–10"],
+      "question": "Compare the path of local printing versus remote Moodle access in the teaching-building network.",
+      "answer": "**Key takeaway:** Local printing stays inside the LAN through the switch, while remote Moodle traffic must cross the default gateway router and ISP.\n\n- **Local printer path:** Student laptop -> Wi-Fi -> Access Point -> Ethernet -> LAN Switch -> Printer (same local network; can still work if the Internet uplink fails).\n- **Remote Moodle path:** Student laptop -> Wi-Fi -> AP -> Switch -> Gateway Router -> ISP / Internet -> Remote Moodle server.\n- **Home Wi-Fi router note:** A single consumer box often combines AP (Wi-Fi), switch (Ethernet ports), and router (LAN-to-ISP).",
+      "components": ["_components/campus-topology.md"]
+    },
+    {
+      "id": "study-w1-q3",
+      "bank": "study",
+      "week": 1,
+      "slides": [13, 14, 15],
+      "tag": ["practical"],
+      "meta": ["Slides 13–15 · Lab 1"],
+      "question": "Explain what interface, IPv4 address, mask/prefix, default gateway, and DHCP mean in a connection record.",
+      "answer": "**Key takeaway:** DHCP automatically supplies an interface's IPv4 address, subnet mask/prefix, and default gateway so the host can reach local and remote networks.\n\n- **Interface:** The active adapter in use (e.g., Wi-Fi or Ethernet).\n- **IPv4 address:** The 32-bit address assigned to that interface (e.g., `192.168.10.25`).\n- **Mask or prefix:** Identifies the network portion of the address (`255.255.255.0` = `/24`).\n- **Default gateway:** The next-hop router for remote destinations (`192.168.10.1`).\n- **Commands:** Windows `ipconfig` (`route print -4`), Linux `ip -br address` / `ip route show default`, macOS `route -n get default` / `ifconfig`."
+    },
+    {
+      "id": "study-w1-q4",
+      "bank": "study",
+      "week": 1,
+      "slides": [18, 19, 20],
+      "tag": ["theory"],
+      "meta": ["Slides 18–20 · Lab 1"],
+      "question": "What is ICMP ping, how do you interpret RTT, and what are ping's limits as design evidence?",
+      "answer": "**Key takeaway:** Ping sends ICMP echo probes to test IP reachability and RTT, but it cannot measure download throughput or prove an application works.\n\n- **Worked RTT (`Slide 19`):** 4 probes sent, 3 replies (`12, 15, 18 ms`) -> Mean RTT = `(12 + 15 + 18) / 3 = 15 ms`. One unanswered probe is an observation, not a diagnosis; a timeout is **not** zero delay.\n- **Loopback (`127.0.0.1`):** Tests only the local IPv4 stack inside your computer, not the Wi-Fi/Ethernet link or gateway.\n- **Limits:** A gateway ping reply does not prove Moodle login works or choose Internet capacity for 60 users; missing replies may reflect ICMP filtering or a connectivity fault."
+    },
+    {
+      "id": "study-w1-q5",
+      "bank": "study",
+      "week": 1,
+      "slides": [22, 23, 24, 27, 28],
+      "tag": ["practical"],
+      "meta": ["Slides 22–28 · Lab 1"],
+      "question": "Distinguish Requirements, Constraints, Assumptions, and Open Questions, and explain access tradeoffs and failure points.",
+      "answer": "**Key takeaway:** Separate what users need from fixed limits, unconfirmed planning assumptions, and unknowns, then match access media and failure points to validation checks.\n\n- **4 Statement Types:** *Requirement* = need the design must satisfy; *Constraint* = fixed limit; *Assumption* = planning claim needing confirmation (e.g., AP count); *Open question* = missing info (budget, cable routes, simultaneous users).\n- **Access Tradeoffs:** Ethernet = stable for fixed PCs (needs cables/ports); Wi-Fi = mobility for laptops (coverage, interference, shared airtime); Mixed = fits both (more equipment to manage).\n- **Failure Points:** Failed AP disconnects its Wi-Fi room; failed shared switch affects multiple devices; failed gateway/ISP stops Internet while local LAN printing may still work."
+    },
+    {
+      "id": "study-w2-q1",
+      "bank": "study",
+      "week": 2,
+      "slides": [3, 4, 5, 6],
+      "tag": ["theory", "formula"],
+      "meta": ["Slides 3–6"],
+      "question": "Explain the four sources of nodal packet delay, traffic intensity (La/R), and how packet loss occurs.",
+      "answer": "**Key takeaway:** Total nodal delay adds processing, queueing, transmission (L/R), and propagation (d/s), while a full output buffer drops arriving packets.\n\n- **Formula (`d_nodal = d_proc + d_queue + d_trans + d_prop`):**\n  1. **Processing (`d_proc`):** Check bit errors & choose output link (< microseconds).\n  2. **Queueing (`d_queue`):** Wait for link; depends on traffic intensity `La/R` (small near `0`, blows up as `La/R -> 1`, infinite if `> 1`).\n  3. **Transmission (`d_trans = L/R`):** Time to push packet bits onto the link (`L` bits / `R` bit/s).\n  4. **Propagation (`d_prop = d/s`):** Travel across physical medium (`d` metres / `s ≈ 2×10^8 m/s`).\n- **Packet loss:** Buffers have finite capacity; packets arriving at a full queue are dropped."
+    },
+    {
+      "id": "study-w2-q2",
+      "bank": "study",
+      "week": 2,
+      "slides": [7, 8, 18, 19],
+      "tag": ["practical", "formula"],
+      "meta": ["Slides 7–8 · L7 18–19"],
+      "question": "Explain bottleneck throughput and how to calculate ideal file transfer time and shared-link capacity.",
+      "answer": "**Key takeaway:** Ideal end-to-end throughput equals the slowest link rate on the path, and ideal transfer time divides total file bits by that bottleneck rate.\n\n- **Bottleneck link:** Constrains average end-to-end throughput (`min(R_s, R_c)`).\n- **Worked Example:** `10 MB` file = `80 Mbit` over `100, 20, 50 Mbit/s` links -> bottleneck = `20 Mbit/s` -> `80 / 20 = 4 s` (excludes overhead, setup, loss, competing traffic).\n- **Shared capacity:** `30 clients × 5 MB = 150 MB = 1,200 Mbit` over `20 Mbit/s` -> `1,200 / 20 = 60 s` ideal."
+    },
+    {
+      "id": "study-w2-q3",
+      "bank": "study",
+      "week": 2,
+      "slides": [9, 10, 11, 12],
+      "tag": ["theory"],
+      "meta": ["Slides 9–12 · Lab 2"],
+      "question": "What are the three network attack types (sniffing, IP spoofing, DoS) and the five lines of defense?",
+      "answer": "**Key takeaway:** Attackers intercept plaintext, forge source IPs, or flood resources; defenses combine authentication, encryption, integrity checks, VPNs, and firewalls.\n\n- **Attacks:** *Packet sniffing* (promiscuous NIC reads broadcast/Wi-Fi traffic, e.g., Wireshark on plain HTTP), *IP spoofing* (injecting packets with false source IP), *DoS / Botnet* (overwhelming target with bogus traffic from compromised hosts).\n- **Defenses:** *Authentication* (prove identity), *Confidentiality* (encryption), *Integrity checks* (digital signatures), *Access restrictions* (VPNs), *Firewalls* (off-by-default packet filtering & DoS detection)."
+    },
+    {
+      "id": "study-w2-q4",
+      "bank": "study",
+      "week": 2,
+      "slides": [13, 14, 15, 16, 17, 18, 19],
+      "tag": ["theory"],
+      "meta": ["Concept · Slides 13–19"],
+      "question": "What is the 5-layer Internet protocol stack, how does encapsulation work, and what changes at a router versus a switch?",
+      "answer": "**Key takeaway:** Each layer adds its own header down the stack; switches inspect only link frames, while routers strip and rebuild the link frame without changing IP addresses.\n\n- **5-Layer Stack (+ OSI difference):** Application (`M`) -> Transport (`Ht + M`, segment) -> Network (`Hn + Ht + M`, datagram) -> Link (`Hl + Hn + Ht + M`, frame) -> Physical (bits). *OSI adds Session & Presentation layers.*\n- **At a Router (no NAT/tunnel):** Removes incoming Ethernet frame (`Hl1`), reads IP header (`Hn`), forwards the same IP packet in a new link frame (`Hl2`) for the next hop. Thus destination MAC is the next-hop router, not the remote server.",
+      "components": ["_components/encapsulation-forwarding.md"]
+    },
+    {
+      "id": "study-w2-q5",
+      "bank": "study",
+      "week": 2,
+      "slides": [20, 22],
+      "tag": ["practical"],
+      "meta": ["Slides 20–22 · Lab 2"],
+      "question": "In Lab 2 (Wireshark & Trust Boundaries), what does an encrypted capture still reveal and how do you restrict payroll access?",
+      "answer": "**Key takeaway:** Encrypted captures still expose IP/port metadata, packet sizes, and timing; trust boundaries separate student and finance networks with verified allow/deny controls.\n\n- **Encrypted capture limits:** Payload is hidden, but Wireshark still sees source/dest MAC & IP, TCP/UDP ports, packet timing, and sizes.\n- **Trust boundary design (`Lab 2`):** Group Student Lab, Finance Office, and Management separately; permit both to reach Internet, restrict Payroll to Finance only, and require HTTPS (instead of plain HTTP) to stop credential sniffing."
+    },
+    {
+      "id": "study-w3-q1",
+      "bank": "study",
+      "week": 3,
+      "slides": [4, 5, 6, 7, 8, 9, 10],
+      "tag": ["theory"],
+      "meta": ["Concept · Slides 4–10"],
+      "question": "Compare Client-Server vs P2P architectures and explain why an IP address alone cannot identify a server process.",
+      "answer": "**Key takeaway:** Client-server uses an always-on host while P2P peers both request and serve; identifying a process requires IP address, transport protocol, and port number.\n\n- **Client-Server vs P2P:** Client-server has an always-on server with a permanent IP (HTTP, IMAP, FTP); P2P has direct peer communication and self-scalability (BitTorrent) with harder management.\n- **Process Addressing:** Many processes run on the same host, so the identifier combines **IP address + port number** (e.g., `128.119.245.12:80`).\n- **Application-layer protocol:** Defines message types, syntax, semantics, and rules (open RFCs like HTTP/SMTP vs proprietary like Zoom)."
+    },
+    {
+      "id": "study-w3-q2",
+      "bank": "study",
+      "week": 3,
+      "slides": [11, 12],
+      "tag": ["theory"],
+      "meta": ["Slides 11–12"],
+      "question": "What four transport service requirements do applications care about, and which apps tolerate loss?",
+      "answer": "**Key takeaway:** Applications evaluate data integrity (loss), timing (delay), throughput, and security; file transfer/web/email need zero loss while live audio/video/games tolerate some loss.\n\n- **No loss, elastic throughput:** File transfer, e-mail, Web documents, text messaging.\n- **Loss-tolerant, time-sensitive (10s of ms) + min throughput:** Real-time audio (`5 Kbps–1 Mbps`), video (`10 Kbps–5 Mbps`), interactive games."
+    },
+    {
+      "id": "study-w3-q3",
+      "bank": "study",
+      "week": 3,
+      "slides": [13, 14, 15, 16, 17, 18],
+      "tag": ["theory"],
+      "meta": ["Slides 13–18"],
+      "question": "Explain HTTP request/response structure, common status codes, and how HTTP/3 improves over HTTP/2.",
+      "answer": "**Key takeaway:** HTTP exchanges ASCII headers and payloads; HTTP/3 moves to QUIC over UDP to add built-in security and avoid TCP head-of-line stalling across objects.\n\n- **HTTP Messages:** Request line (`GET /index.html HTTP/1.1`) + headers (`Host:`, `Connection: keep-alive`) + blank `\\r\\n`. Response status line (`HTTP/1.1 200 OK`) + headers (`Content-Type`, `Content-Length`) + body.\n- **Status Codes:** `200 OK`, `301 Moved Permanently` (check `Location:` header), `400 Bad Request`, `404 Not Found`, `505 HTTP Version Not Supported`.\n- **HTTP/2 vs HTTP/3:** HTTP/2 over one TCP connection still stalls all objects on packet loss; HTTP/3 uses QUIC over UDP for per-object error/congestion control and security."
+    },
+    {
+      "id": "study-w3-q4",
+      "bank": "study",
+      "week": 3,
+      "slides": [19, 20, 21, 22, 23],
+      "tag": ["theory"],
+      "meta": ["Concept · Slides 19–23"],
+      "question": "What is DNS, how does hierarchical resolution and TTL caching work, and what do A, AAAA, CNAME, NS, and MX records store?",
+      "answer": "**Key takeaway:** DNS is a distributed hierarchical database mapping hostnames to IP addresses, cached by local resolvers up to each record's TTL.\n\n- **Hierarchy:** Client -> Local DNS server -> Root -> Top-Level Domain (`.com`, `.edu`) -> Authoritative server.\n- **TTL Caching:** Speeds up replies, but cached entries can become stale until TTL expires when a host changes IP.\n- **Record Types `(name, value, type, ttl)`:** `A` = IPv4 address; `AAAA` = IPv6 address; `CNAME` = alias to canonical hostname; `NS` = authoritative name server; `MX` = mail server."
+    },
+    {
+      "id": "study-w3-q5",
+      "bank": "study",
+      "week": 3,
+      "slides": [24, 25],
+      "tag": ["practical"],
+      "meta": ["Slides 24–25 · Lab 3"],
+      "question": "In Lab 3, how does a 404 response differ from a DNS failure or stopped server, and why do browser DevTools show HTTPS headers?",
+      "answer": "**Key takeaway:** A 404 proves DNS, TCP, and the HTTP server all worked; DevTools inspects headers inside the browser before encryption/after decryption.\n\n- **404 vs Stopped Server vs DNS failure:** `404` (`missing.txt`) = HTTP server answered; stopped server = browser connection error with no HTTP status; DNS failure (`nslookup`) = name never resolved to an IP.\n- **Loopback (`127.0.0.1:8000`):** Works without public DNS.\n- **DevTools vs Wireshark:** Browser DevTools sit inside the endpoint after TLS decryption, whereas an on-wire capture sees only encrypted payloads."
+    },
+    {
+      "id": "study-w4-q1",
+      "bank": "study",
+      "week": 4,
+      "slides": [3, 5, 6, 9, 10],
+      "tag": ["theory"],
+      "meta": ["Concept · Slides 3–10"],
+      "question": "What is a socket, how are endpoints identified in the echo lab, and do TCP/UDP sockets encrypt payloads?",
+      "answer": "**Key takeaway:** A socket is the software door between an app process and the OS transport stack; plain sockets do not encrypt traffic.\n\n- **Endpoint tuple:** IP address + transport protocol + port (`127.0.0.1`, `TCP 12000` vs `UDP 12000` are distinct endpoints; client receives an ephemeral port).\n- **Security:** Ordinary TCP/UDP sockets send plaintext (`echo.py` is unencrypted); security requires TLS over TCP or QUIC (TLS 1.3) over UDP."
+    },
+    {
+      "id": "study-w4-q2",
+      "bank": "study",
+      "week": 4,
+      "slides": [12, 13, 14, 15],
+      "tag": ["practical"],
+      "meta": ["Slides 12–15 · Lab 4"],
+      "question": "How does a UDP client/server socket exchange work, and what happens when the UDP server is stopped?",
+      "answer": "**Key takeaway:** UDP uses SOCK_DGRAM without a handshake and preserves datagram boundaries; a stopped server yields a timeout or OS error (not proof of random packet loss).\n\n- **UDP Calls:** Server creates `socket(AF_INET, SOCK_DGRAM)`, binds port `12000`, reads datagram + client address, and replies. Client creates `SOCK_DGRAM`, sends datagram to `(serverIP, 12000)`, waits with a timeout, and closes.\n- **Stopped Server (`Lab 4`):** Client hits a receive timeout or OS error (`ConnectionResetError` on Windows)—do not invent packet-loss evidence from an absent server."
+    },
+    {
+      "id": "study-w4-q3",
+      "bank": "study",
+      "week": 4,
+      "slides": [16, 17, 18, 19, 20],
+      "tag": ["practical"],
+      "meta": ["Slides 16–20 · Lab 4"],
+      "question": "How does a TCP client/server socket exchange work, and why does a TCP byte stream require message framing?",
+      "answer": "**Key takeaway:** TCP uses SOCK_STREAM with accept() creating a per-client connectionSocket; because TCP is a byte stream, one recv() may return partial data until a delimiter like \\n arrives.\n\n- **TCP Calls:** Server creates welcoming `serverSocket` (`listen`), calls `accept()` -> returns new `connectionSocket` per client. Client calls `connect()`, then `sendall()` and `recv()` in a loop.\n- **Framing (`echo.py`):** Sends bytes + `\\n` and loops `recv()` until `\\n`, close, or `4096`-byte limit. One `send`/`recv` is not one message."
+    },
+    {
+      "id": "study-w5-q1",
+      "bank": "study",
+      "week": 5,
+      "slides": [4, 5, 6, 9],
+      "tag": ["theory"],
+      "meta": ["Concept · Slides 4–9"],
+      "question": "How does transport-layer multiplexing/demultiplexing differ from network-layer delivery, and what is in a UDP header?",
+      "answer": "**Key takeaway:** Network layer delivers between hosts (houses) while transport layer delivers between processes (kids) using port numbers; UDP headers carry 4 fields.\n\n- **Multiplexing / Demultiplexing:** Sender gathers data from sockets and adds transport header; receiver uses header ports to deliver segments to the right socket.\n- **UDP Header (8 bytes):** `source port #` (16 bits), `dest port #` (16 bits), `length` (bytes including header), and `checksum` (error detection)."
+    },
+    {
+      "id": "study-w5-q2",
+      "bank": "study",
+      "week": 5,
+      "slides": [10, 11, 13, 15, 16, 17, 18, 19, 20],
+      "tag": ["theory"],
+      "meta": ["Slides 10–20"],
+      "question": "Trace how rdt1.0 through rdt2.2 handle bit errors and corrupted ACK/NAK feedback.",
+      "answer": "**Key takeaway:** rdt2.0 adds checksums and ACK/NAK, rdt2.1 adds 0/1 sequence labels so receivers suppress duplicate retries, and rdt2.2 replaces NAKs by repeating the last-good ACK.\n\n- **5 Failure Types:** Loss, Delay, Corruption, Duplicate, Reordering.\n- **Detection vs Recovery:** Checksum *detects* bit flips; ACK/NAK/retry *recovers*.\n- **rdt2.0 fatal flaw:** If ACK/NAK is corrupted, sender cannot tell if receiver got the packet -> must retransmit, risking duplicates.\n- **rdt2.1 -> rdt2.2:** `0/1` sequence labels let receiver discard duplicates and repeat ACK; `rdt2.2` drops NAK and repeats last-good `ACK0`/`ACK1`."
+    },
+    {
+      "id": "study-w5-q3",
+      "bank": "study",
+      "week": 5,
+      "slides": [21, 22, 23, 24, 25, 26, 27],
+      "tag": ["practical"],
+      "meta": ["Slides 21–27 · Lab 5"],
+      "question": "How does rdt3.0 handle packet loss and ACK loss without delivering duplicates, and what does a timeout actually prove?",
+      "answer": "**Key takeaway:** rdt3.0 adds a countdown timer; if an ACK is lost or late, the receiver has already delivered DATA once, suppresses the duplicate retry, and repeats its ACK.\n\n- **Timeout ambiguity:** A timeout only shows the sender did not receive the matching ACK in time—it cannot tell whether DATA was lost, ACK was lost, or ACK was delayed.\n- **Toy labels vs TCP:** `DATA0`/`ACK0` identify whole teaching messages; never treat `ACK0` as a TCP byte acknowledgement.",
+      "components": ["_components/rdt30-ack-loss.md"]
+    },
+    {
+      "id": "study-w5-q4",
+      "bank": "study",
+      "week": 5,
+      "slides": [29, 30, 31, 32, 33, 34, 35, 36],
+      "tag": ["practical", "formula"],
+      "meta": ["Slides 29–36 · Lab 5"],
+      "question": "How do you calculate ideal stop-and-wait utilisation U, and why does pipelining improve it?",
+      "answer": "**Key takeaway:** Stop-and-wait utilisation U = T_tx / (T_tx + RTT) is low when RTT is long; pipelining keeps multiple packets in flight to fill the waiting time.\n\n- **Worked Example (`Slides 31–32`):** `L = 10,000 bits`, `R = 10 Mbit/s` -> `T_tx = 1 ms`. With `RTT = 20 ms`, `Cycle = 21 ms` -> `U = 1 / 21 = 4.76%`.\n- **With 3-packet pipeline (`Slide 36`):** `3 ms` busy in `21 ms` -> `3 / 21 = 14.29%` (21 packets could fill 100% ideally).\n- **Pipeline needs:** Larger sequence-number space, sender/receiver buffering, and congestion/capacity controls."
+    },
+    {
+      "id": "study-w5-q5",
+      "bank": "study",
+      "week": 5,
+      "slides": [37, 38, 39, 40],
+      "tag": ["practical"],
+      "meta": ["Slides 37–40 · Lab 5"],
+      "question": "Compare transport and application choices for (a) a 50 MB authorised config file vs (b) 20 Hz live sensor readings (< 200 ms).",
+      "answer": "**Key takeaway:** The config file needs TCP + TLS + version/hash verification + resume, while fresh sensor readings can use UDP (or QUIC) with timestamps, sequence IDs, and congestion control.\n\n- **50 MB Config File:** Use **TCP + TLS** (authentication & confidentiality), verify intended version and complete content (file hash/length), and support resume/retry on mid-transfer drop.\n- **Sensor Readings (20/s, drop > 200 ms):** **UDP** fits if occasional loss is fine; app adds message IDs, timestamps (requires shared-clock assumption) to discard stale > 200 ms or duplicate readings, and rate reduction on congestion (or use mature **QUIC**)."
+    },
+    {
+      "id": "study-w6-q1",
+      "bank": "study",
+      "week": 6,
+      "slides": [3, 4, 5, 6, 7, 12, 13],
+      "tag": ["practical", "formula"],
+      "meta": ["Concept · Slides 3–13 · Lab 6"],
+      "question": "How does TCP (RFC 9293) number bytes and compute cumulative ACKs when a segment is missing?",
+      "answer": "**Key takeaway:** TCP numbers data bytes (Last byte = Seq + Bytes - 1), and cumulative ACKs always name the next contiguous byte expected—pointing to the first missing byte.\n\n- **Segment header (`Slide 5`):** Source/dest ports, 32-bit byte `sequence number`, `acknowledgement number`, `receive window` (flow control), checksum, and flags (`C, E, U, A, P, R, S, F`).\n- **Cumulative ACK with gap (`Slide 12`):** `101–104` arrives -> `ACK 105`; `105–108` lost; `109–112` arrives & is buffered -> still `ACK 105`; `105–108` retransmitted & accepted -> jumps to `ACK 113`."
+    },
+    {
+      "id": "study-w6-q2",
+      "bank": "study",
+      "week": 6,
+      "slides": [9, 10, 11],
+      "tag": ["theory", "formula"],
+      "meta": ["Slides 9–11"],
+      "question": "How does TCP set TimeoutInterval from EstimatedRTT and DevRTT, and what happens on premature timeout?",
+      "answer": "**Key takeaway:** TimeoutInterval = EstimatedRTT + 4 * DevRTT adds a safety margin for RTT jitter; premature timeouts cause unnecessary retransmissions but cumulative ACKs advance SendBase safely.\n\n- **Too short vs too long:** Too short -> premature timeouts & duplicate sends; too long -> slow loss recovery.\n- **Formula:** `TimeoutInterval = EstimatedRTT + 4*DevRTT`, where `DevRTT = (1 - beta)*DevRTT + beta*|SampleRTT - EstimatedRTT|` (`beta = 0.25`). Avoid sampling retransmitted segments (ambiguous ACK)."
+    },
+    {
+      "id": "study-w6-q3",
+      "bank": "study",
+      "week": 6,
+      "slides": [14, 15, 20, 21],
+      "tag": ["theory"],
+      "meta": ["Concept · Slides 14–21"],
+      "question": "Distinguish TCP flow control (rwnd) from congestion control (cwnd) and explain ECN.",
+      "answer": "**Key takeaway:** rwnd protects one receiver's buffer from overflowing, whereas cwnd throttles the sender to match network path congestion.\n\n- **Effective Window Limit:** `min(rwnd, cwnd)`. Example: `rwnd = 12 kB`, `cwnd = 8 kB` -> limit is `8 kB`; with `5 kB` in flight, `3 kB` more can be sent.\n- **ECN (Explicit Congestion Notification):** Routers mark packets to signal congestion before buffer overflow; receiver echoes the mark back to the sender."
+    },
+    {
+      "id": "study-w6-q4",
+      "bank": "study",
+      "week": 6,
+      "slides": [16, 17, 18, 19, 26],
+      "tag": ["practical"],
+      "meta": ["Slides 16–26 · Lab 6"],
+      "question": "Trace the TCP 3-way handshake sequence/ACK numbers and connection closing (FIN).",
+      "answer": "**Key takeaway:** SYN and FIN each consume 1 sequence number while a pure ACK consumes 0; first data starts at ISN + 1.\n\n- **Worked Handshake (`Slide 26`):** A starts `100`, B starts `700`.\n  1. A -> B: `SYN, Seq=100` (uses 1 seq #).\n  2. B -> A: `SYN, ACK, Seq=700, ACK=101` (acks A's SYN).\n  3. A -> B: `ACK, Seq=101, ACK=701` (pure ACK uses 0 seq #).\n- **First data:** A's starts at `101`, B's at `701`.\n- **Closing (`Slide 19`):** Each side sends `FIN = 1` and replies with `ACK`.",
+      "components": ["_components/tcp-handshake-bytes.md"]
+    },
+    {
+      "id": "study-w6-q5",
+      "bank": "study",
+      "week": 6,
+      "slides": [22, 23, 24, 25],
+      "tag": ["theory", "formula"],
+      "meta": ["Slides 22–25"],
+      "question": "Explain Slow Start, AIMD, CUBIC, window-limited throughput, and QUIC 0-RTT replay limits.",
+      "answer": "**Key takeaway:** Slow Start grows exponentially to ssthresh, AIMD grows +1 MSS/RTT and halves on loss, and window-limited rate is Window / RTT.\n\n- **Slow Start & AIMD:** Slow start grows `4 -> 8 -> 16 MSS` per RTT until `ssthresh`; AIMD adds `1 MSS/RTT` (`10, 11, 12`) and cuts to half (`6`) on loss. **CUBIC** grows slowly near the previous peak, faster past it.\n- **Window-limited rate (`Slide 23`):** `40,000 bytes / 0.04 s = 1,000,000 B/s = 8 Mb/s` (capped by `min(8, 10) = 8 Mb/s`; if RTT doubles, rate halves).\n- **QUIC:** Secures streams over UDP with independent per-stream delivery; **0-RTT** early data can be **replayed**, so apps restrict non-idempotent actions."
+    },
+    {
+      "id": "study-w6-q6",
+      "bank": "study",
+      "week": 6,
+      "slides": [28, 29],
+      "tag": ["practical", "formula"],
+      "meta": ["Slides 28–29 · Lab 6"],
+      "question": "How do you compute useful throughput and design a reproducible file-transfer performance test?",
+      "answer": "**Key takeaway:** Useful throughput divides verified file bits by elapsed seconds, and a reproducible test fixes workload, path, timer boundaries, and file-hash acceptance.\n\n- **Formula:** `Useful throughput = verified file bits / elapsed seconds` (invalid/corrupted hash trials cannot count).\n- **4 Test Elements (`Slide 29`):** *Workload* (file identity, bytes, client count), *Path* (source, dest, link conditions, competing traffic), *Measurement* (exact timer start/stop, elapsed time, successful trials), *Acceptance* (target + matching file hash)."
+    },
+    {
+      "id": "study-w7-q1",
+      "bank": "study",
+      "week": 7,
+      "slides": [3, 4, 5, 6],
+      "tag": ["practical"],
+      "meta": ["Midterm Review · Slides 3–6"],
+      "question": "In the Midterm Review Campus Network, how do Requirements, Assumptions, Observations, Acceptance Criteria, and Wireless Coverage differ?",
+      "answer": "**Key takeaway:** One strong Wi-Fi reading near an AP only proves signal at that spot for one client—it never proves 30-student room coverage.\n\n- **3 Planning Categories (`Slide 4`):** *Requirement* = confirmed user task (office staff print); *Assumption* = unverified claim (one AP covers the room -> test under load); *Observation* = recorded fact with exact scope (one client loaded public page).\n- **Acceptance Criteria (`Slide 5`):** Pair task + workload + time target (e.g., *30 clients retrieve 5 MB within 90 s*, confirmed by teacher).\n- **Wireless Coverage Exercise (`Slide 6`):** Near-AP test supports only single-client near-AP signal; additional observations needed across room corners and under 30-client load."
+    },
+    {
+      "id": "study-w7-q2",
+      "bank": "study",
+      "week": 7,
+      "slides": [7, 8],
+      "tag": ["theory"],
+      "meta": ["Midterm Review · Slides 7–8"],
+      "question": "List the 5 Network Devices in the campus design and compare the 3 local vs remote communication paths and boundaries.",
+      "answer": "**Key takeaway:** Local office printing stays on the office subnet via the switch, while student-to-Moodle leaves campus and student-to-office-printer crosses a routing and access-policy boundary.\n\n- **5 Devices (`Slide 7`):** *Access point* (Wi-Fi -> LAN), *Switch* (Ethernet inside LAN), *Router/gateway* (forwards between IP networks), *DNS resolver* (name -> IP lookup), *Application server* (runs Moodle/app exchange).\n- **3 Paths (`Slide 8`):** (1) *Office PC -> Printer:* PC, office switch, printer (same subnet). (2) *Student -> Remote site:* Client, AP, switch, router, ISP, server (leaves campus). (3) *Student -> Office printer:* Client, AP, switch, router, office LAN (requires both routing and access-control policy)."
+    },
+    {
+      "id": "study-w7-q3",
+      "bank": "study",
+      "week": 7,
+      "slides": [9, 10, 11],
+      "tag": ["theory"],
+      "meta": ["Midterm Review · Slides 9–11"],
+      "question": "Trace the 5 Internet Protocol Layers, Encapsulation across a switch and router, and the 4 steps of Application Communication.",
+      "answer": "**Key takeaway:** Data is wrapped down the 5 layers (message -> segment -> datagram -> frame -> bits); switches read only link frames while routers unwrap and rebuild the link frame for each hop.\n\n- **5 Layers (`Slide 9`):** *Application* (HTTP, IMAP, SMTP, DNS), *Transport* (TCP, UDP — process-to-process), *Network* (IP — host-to-host routing), *Link* (Ethernet, 802.11 Wi-Fi, PPP — neighbor hop), *Physical* (bits on wire).\n- **Encapsulation (`Slide 10`):** App `M` -> Transport `Ht+M` (segment) -> Network `Hn+Ht+M` (datagram) -> Link `Hl+Hn+Ht+M` (frame). Switch inspects Link+Physical; Router inspects Network+Link+Physical.\n- **4 App Steps (`Slide 11`):** DNS resolves name -> remote traffic uses default gateway -> IP carries packets with per-link framing -> HTTPS protects HTTP.",
+      "components": ["_components/encapsulation-forwarding.md"]
+    },
+    {
+      "id": "study-w7-q4",
+      "bank": "study",
+      "week": 7,
+      "slides": [12, 13, 14, 15, 16],
+      "tag": ["practical", "formula"],
+      "meta": ["Midterm Review · Slides 12–16"],
+      "question": "Solve the Midterm Review Packet Delay exercise (2,000 bytes at 20 Mbit/s + 2 ms propagation) and state the 4 delay components.",
+      "answer": "**Key takeaway:** Transmission + propagation = 2.8 ms; the calculation excludes nodal processing (d_proc) and queueing delay (d_queue).\n\n- **4 Nodal Delays (`Slide 13`):** `d_nodal = d_proc` (bit check & output lookup, < us) `+ d_queue` (waiting in router buffer, depends on congestion) `+ d_trans` (`L/R`) `+ d_prop` (`d/s`).\n- **Worked Exercise (`Slide 16`):** `2,000 bytes × 8 = 16,000 bits`; `R = 20,000,000 bit/s` -> `d_trans = 16,000 / 20,000,000 = 0.0008 s = 0.8 ms`. Combined with `2 ms` propagation = `0.8 + 2 = 2.8 ms`. Excludes `d_proc` and `d_queue`."
+    },
+    {
+      "id": "study-w7-q5",
+      "bank": "study",
+      "week": 7,
+      "slides": [17, 18, 19, 20],
+      "tag": ["practical", "formula"],
+      "meta": ["Midterm Review · Slides 17–20"],
+      "question": "How do you calculate ideal file transfer time and shared-link capacity, and why won't a 1 Gbit/s switch speed up a 20 Mbit/s Internet link?",
+      "answer": "**Key takeaway:** End-to-end ideal throughput is capped by the slowest (bottleneck) link, so upgrading a 100 Mbit/s local switch to 1 Gbit/s cannot speed up a 20 Mbit/s Internet bottleneck.\n\n- **Single Flow (`Slide 18`):** `10 MB = 80 Mbit` over `100, 20, 50 Mbit/s` -> bottleneck `20 Mbit/s` -> `80 / 20 = 4 s`.\n- **Shared Link (`Slide 19`):** `30 clients × 5 MB = 150 MB = 1,200 Mbit` over `20 Mbit/s` -> `1,200 / 20 = 60 s` ideal (excludes overhead, loss, setup, competing traffic).\n- **Switch Upgrade Exercise (`Slide 20`):** No—the `20 Mbit/s` Internet link remains the active bottleneck, so ideal Internet transfer rate stays `20 Mbit/s`."
+    },
+    {
+      "id": "study-w7-q6",
+      "bank": "study",
+      "week": 7,
+      "slides": [21, 22, 23],
+      "tag": ["theory", "formula"],
+      "meta": ["Midterm Review · Slides 21–23"],
+      "question": "Compare TCP vs UDP priorities, trace the Lost Acknowledgement (block 7) scenario, and calculate Stop-and-Wait utilisation.",
+      "answer": "**Key takeaway:** TCP fits files where missing bytes break the file, UDP fits fresh sensor readings, and repeating ACKs on duplicate retries lets stop-and-wait recover from lost ACKs (at ~4.8% utilisation here).\n\n- **Lost ACK (`Slide 22`):** Block 7 arrives -> receiver delivers once & sends ACK -> ACK disappears -> sender times out & resends block 7 with same label -> receiver spots duplicate, suppresses delivery, and repeats ACK.\n- **Stop-and-Wait (`Slide 23`):** `10,000 bits / 10 Mbit/s = 1 ms` sending; `RTT = 20 ms` -> `Cycle = 21 ms` -> `U = 1 / 21 ≈ 4.8%`. Pipelining keeps several packets in flight to use waiting time."
+    },
+    {
+      "id": "study-w7-q7",
+      "bank": "study",
+      "week": 7,
+      "slides": [24, 25, 26, 27],
+      "tag": ["practical", "formula"],
+      "meta": ["Midterm Review · Slides 24–27"],
+      "question": "Solve the Midterm Review TCP Byte Numbers exercise (start 5,000; A=400 B, B=600 B) and list the 4 TCP Throughput Limits.",
+      "answer": "**Key takeaway:** Segment A carries bytes 5,000–5,399 and B carries 5,400–5,999; if B arrives first, the receiver buffers B and keeps sending ACK 5,000 until A arrives (then jumps to ACK 6,000).\n\n- **Worked Exercise (`Slide 26`):** Start `5,000`. Segment A (`400 B`) = `5,000..5,399`. Segment B (`600 B`) = `5,400..5,999`. Both in order -> `ACK 6,000`. If B arrives first & is buffered -> `ACK 5,000` stays unchanged until A fills the gap.\n- **4 TCP Throughput Limits (`Slide 27`):** *Receive window* (receiver buffer space), *Congestion window* (sender network limit), *Bottleneck link* (path capacity), *Application demand* (data ready to send).",
+      "components": ["_components/tcp-handshake-bytes.md"]
+    },
+    {
+      "id": "study-w7-q8",
+      "bank": "study",
+      "week": 7,
+      "slides": [28, 29, 30, 31, 32],
+      "tag": ["practical"],
+      "meta": ["Midterm Review · Slides 28–32"],
+      "question": "Given gateway ping OK, DNS A=192.0.2.80, TCP 443 open, and HTTP 503, what succeeded, what failed, and what remains untested?",
+      "answer": "**Key takeaway:** Local ICMP, DNS resolution, and TCP port 443 all succeeded; the failure is at the HTTP service (503 Unavailable), leaving TLS/account/file delivery untested.\n\n- **Layer-by-Layer Diagnostic (`Slides 30–31`):** Gateway ping = local ICMP worked; DNS `A` = name resolved; TCP 443 = TCP connection opened; `HTTP 503` = HTTP responder reported unavailable.\n- **Exercise (`Slide 32`):** Does **not** prove the lesson file is available; next step is checking server/application logs or status and retesting.",
+      "components": ["_components/diagnostic-chain.md"]
+    },
+    {
+      "id": "study-w7-q9",
+      "bank": "study",
+      "week": 7,
+      "slides": [33, 34, 35, 36],
+      "tag": ["practical"],
+      "meta": ["Midterm Review · Slides 33–36"],
+      "question": "Compare the 3 Network Upgrade Options, explain Printer Access Control testing, and state the 4 Design Validation rules.",
+      "answer": "**Key takeaway:** Match upgrades to measured evidence (bottleneck/load/survey), verify access control with both allowed and denied tests, and record unresolved assumptions before approval.\n\n- **3 Upgrade Options (`Slide 33`):** *A: 1 Gbit/s switch* -> local wired capacity (needs bottleneck proof); *B: 40 Mbit/s ISP* -> Internet capacity (needs demand/completion times); *C: 2nd AP* -> wireless coverage/airtime (needs seating survey & load test).\n- **Printer Policy (`Slide 34`):** Office may print, students may not—test both allowed and denied cases.\n- **4 Validation Rules (`Slide 35`):** Representative task tests, measure app completion + network behaviour, test allow & deny separately, record unresolved assumptions."
+    },
+    {
+      "id": "quiz-q1",
+      "bank": "quiz",
+      "week": 1,
+      "tag": ["practical"],
+      "meta": ["Quiz Q1 · 1 pt"],
+      "question": "A classroom video service is tested by two teams: one uses 5 wireless clients and the other uses 20. What must they do before using these results to compare two network designs?",
+      "answer": "**Answer: a.** Repeat a defined workload with the same client count, location and timing rules, and record successful playback as well as elapsed time.\n\n- **Why:** Comparing 5 clients vs 20 clients changes the workload and invalidates the comparison. Both teams must hold client count, location, and timing rules fixed and verify actual playback success (not just elapsed time or a single ping)."
+    },
+    {
+      "id": "quiz-q2",
+      "bank": "quiz",
+      "week": 6,
+      "tag": ["practical"],
+      "meta": ["Quiz Q2 · 1 pt"],
+      "question": "A client sends SYN with sequence number 1200. The server sends SYN ACK with sequence number 4000 and acknowledgement 1201. No data is carried. Which pair gives the first DATA byte sequence number for the client and the server?",
+      "answer": "**Answer: a.** Client `1201`; server `4001`.\n\n- **Working:** Each `SYN` flag consumes **1** sequence number (`1200 -> 1201` for client; `4000 -> 4001` for server), while the client's final pure `ACK` consumes **0** sequence numbers."
+    },
+    {
+      "id": "quiz-q3",
+      "bank": "quiz",
+      "week": 2,
+      "tag": ["theory"],
+      "meta": ["Quiz Q3 · 1 pt"],
+      "question": "An IP packet crosses two Ethernet links through a router (ordinary forwarding, no NAT, no tunnel). Which description is correct?",
+      "answer": "**Answer: b.** The router removes the incoming link frame and forwards the IP packet in a new frame for the next link.\n\n- **Why:** Link-layer frames (and MAC addresses) are local to each hop; routers operate at Layer 3 (Network), stripping the incoming Ethernet frame and encapsulating the preserved IP packet in a new frame for the outgoing link."
+    },
+    {
+      "id": "quiz-q4",
+      "bank": "quiz",
+      "week": 7,
+      "tag": ["practical"],
+      "meta": ["Quiz Q4 · 1 pt"],
+      "question": "A proposed design must let students read a shared course folder but prevent them from changing its files. Which test best checks that requirement?",
+      "answer": "**Answer: a.** Use a representative student account to read a known file, then attempt a harmless change and check it is denied without changing the original file.\n\n- **Why:** Access-control validation must test both the **allowed** action (read) and the **denied** action (write/modify) using a representative account—a topology diagram, ping, or private IP never proves file permissions."
+    },
+    {
+      "id": "quiz-q5",
+      "bank": "quiz",
+      "week": 2,
+      "tag": ["practical", "formula"],
+      "meta": ["Quiz Q5 · 1 pt"],
+      "question": "A packet contains 1,500 bytes. The link rate is 80 Mbit/s (80,000,000 bit/s). Calculate transmission delay in milliseconds (ignore all other delays).",
+      "answer": "**Answer:** `0.15` ms.\n\n- **Step 1 (Convert bytes to bits):** `1,500 bytes × 8 = 12,000 bits`.\n- **Step 2 (Divide by rate):** `d_trans = L / R = 12,000 / 80,000,000 = 0.00015 s`.\n- **Step 3 (Convert to ms):** `0.00015 × 1,000 = 0.15 ms`."
+    },
+    {
+      "id": "quiz-q6",
+      "bank": "quiz",
+      "week": 2,
+      "tag": ["practical", "formula"],
+      "meta": ["Quiz Q6 · 1 pt"],
+      "question": "A link is 400 km long. Signal propagation speed is 200,000,000 metres per second. Calculate one-way propagation delay in milliseconds (ignore all other delays).",
+      "answer": "**Answer:** `2` ms.\n\n- **Step 1 (Convert km to metres):** `400 km = 400,000 m`.\n- **Step 2 (Divide by speed):** `d_prop = d / s = 400,000 / 200,000,000 = 0.002 s`.\n- **Step 3 (Convert to ms):** `0.002 × 1,000 = 2 ms`."
+    },
+    {
+      "id": "quiz-q7",
+      "bank": "quiz",
+      "week": 6,
+      "tag": ["practical"],
+      "meta": ["Quiz Q7 · 1 pt"],
+      "question": "In a simplified classic AIMD congestion-avoidance model, a window of 8 MSS grows by 1 MSS per RTT for two RTTs, then a congestion signal makes the sender keep half its window. Which sequence of window sizes follows?",
+      "answer": "**Answer: b.** `8, 9, 10, 5 MSS`.\n\n- **Working:** Start at `8 MSS` -> RTT 1 (`+1`) = `9 MSS` -> RTT 2 (`+1`) = `10 MSS` -> congestion signal halves `10 / 2 = 5 MSS`."
+    },
+    {
+      "id": "quiz-q8",
+      "bank": "quiz",
+      "week": 2,
+      "tag": ["practical", "formula"],
+      "meta": ["Quiz Q8 · 1 pt"],
+      "question": "One flow transfers a 9 MB file over a path with link rates of 30, 8 and 100 Mbit/s (decimal units: 1 MB = 1,000,000 bytes). Assume the slowest link limits sustained rate and ignore setup, headers, loss and competing traffic. Calculate ideal transfer time in seconds.",
+      "answer": "**Answer:** `9` s.\n\n- **Step 1 (Bottleneck link):** `min(30, 8, 100) = 8 Mbit/s = 8,000,000 bit/s`.\n- **Step 2 (File bits):** `9 MB = 9,000,000 bytes × 8 = 72,000,000 bits`.\n- **Step 3 (Transfer time):** `72,000,000 / 8,000,000 = 9 s`."
+    },
+    {
+      "id": "quiz-q9",
+      "bank": "quiz",
+      "week": 3,
+      "tag": ["theory"],
+      "meta": ["Quiz Q9 · 1 pt"],
+      "question": "A DNS command returns an A record for a website hostname. What does this observation directly support?",
+      "answer": "**Answer: b.** That query returned IPv4 address data for the requested name at that time.\n\n- **Why:** DNS resolution is separate from TLS certificate validation, user authorisation, and HTTP file delivery."
+    },
+    {
+      "id": "quiz-q10",
+      "bank": "quiz",
+      "week": 3,
+      "tag": ["theory"],
+      "meta": ["Quiz Q10 · 1 pt"],
+      "question": "A browser records a response status of 200 OK and a Content-Type header of text/html. Which statement correctly interprets these two fields?",
+      "answer": "**Answer: a.** The status reports the HTTP request outcome; `Content-Type` describes the returned representation. Neither field alone identifies the exact body contents.\n\n- **Why:** A `200 OK` `text/html` response could be the intended page or a login redirect/form—you must inspect the actual body."
+    },
+    {
+      "id": "quiz-q11",
+      "bank": "quiz",
+      "week": 4,
+      "tag": ["practical"],
+      "meta": ["Quiz Q11 · 1 pt"],
+      "question": "A TCP client sends the bytes HELLO followed by a newline. The receiver first reads HE and later LLO followed by the newline. What should a newline-delimited application do?",
+      "answer": "**Answer: c.** Accumulate the ordered bytes until the delimiter is available, then interpret the complete message.\n\n- **Why:** TCP is an ordered byte stream, not a message-preserving protocol; one `send()` can arrive across multiple `recv()` calls, so applications loop until the framing delimiter (`\\n`)."
+    },
+    {
+      "id": "quiz-q12",
+      "bank": "quiz",
+      "week": 4,
+      "tag": ["theory"],
+      "meta": ["Quiz Q12 · 1 pt"],
+      "question": "A sensor sends frequent recent readings. The application can tolerate an occasional missing reading and has its own freshness and congestion policy. Which choice is reasonable?",
+      "answer": "**Answer: b.** UDP can be appropriate if the application handles the needed loss, freshness and traffic-control behavior.\n\n- **Why:** UDP gives no built-in delivery, ordering, or congestion control, so it fits loss-tolerant fresh telemetry only when the application supplies freshness/congestion policies."
+    },
+    {
+      "id": "quiz-q13",
+      "bank": "quiz",
+      "week": 5,
+      "tag": ["practical"],
+      "meta": ["Quiz Q13 · 1 pt"],
+      "question": "In an alternating-bit stop-and-wait model, the receiver accepts DATA1 and sends ACK1. ACK1 is delayed, so the sender times out. A second DATA1 arrives while the receiver expects DATA0. What should happen?",
+      "answer": "**Answer: a.** Recognise the old label, do not deliver it again, and repeat `ACK1`.\n\n- **Why:** Suppressing duplicate delivery preserves once-only application delivery, while repeating `ACK1` lets the sender advance to `DATA0`."
+    },
+    {
+      "id": "quiz-q14",
+      "bank": "quiz",
+      "week": 5,
+      "tag": ["theory"],
+      "meta": ["Quiz Q14 · 1 pt"],
+      "question": "A sender retransmits after a timeout. The trace does not show whether the original data or acknowledgement was lost or delayed. Which conclusion is justified?",
+      "answer": "**Answer: b.** The sender did not receive the expected acknowledgement in time; more evidence is needed to identify the cause.\n\n- **Why:** From the sender's viewpoint, lost DATA, lost ACK, and delayed ACK all look identical—only a timeout."
+    },
+    {
+      "id": "quiz-q15",
+      "bank": "quiz",
+      "week": 5,
+      "tag": ["practical", "formula"],
+      "meta": ["Quiz Q15 · 1 pt"],
+      "question": "A stop-and-wait sender transmits an 8,000-bit packet on an 8 Mbit/s link. The additional round-trip wait, excluding that packet transmission time, is 9 ms (ignore loss and ACK tx/processing). What percentage of each cycle is spent transmitting?",
+      "answer": "**Answer:** `10` (10%).\n\n- **Step 1 (Sending time):** `T_tx = 8,000 / 8,000,000 = 0.001 s = 1 ms`.\n- **Step 2 (Complete cycle):** `Cycle = T_tx + RTT = 1 + 9 = 10 ms`.\n- **Step 3 (Utilisation):** `U = 1 / 10 = 0.10 = 10%`."
+    },
+    {
+      "id": "quiz-q16",
+      "bank": "quiz",
+      "week": 5,
+      "tag": ["theory"],
+      "meta": ["Quiz Q16 · 1 pt"],
+      "question": "Why can pipelining improve utilisation compared with stop-and-wait on a path with a long round-trip delay?",
+      "answer": "**Answer: b.** It permits multiple packets to be outstanding, using time that stop-and-wait would spend waiting.\n\n- **Why:** Pipelining does not remove ACKs, prevent congestion, or change propagation speed—it fills the idle RTT waiting window with additional transmissions."
+    },
+    {
+      "id": "quiz-q17",
+      "bank": "quiz",
+      "week": 6,
+      "tag": ["practical", "formula"],
+      "meta": ["Quiz Q17 · 1 pt"],
+      "question": "In an established TCP connection, one segment carries consecutive data bytes numbered 6200 through 6599 inclusive (ignore SYN/FIN and wrap). How many DATA bytes does that segment carry?",
+      "answer": "**Answer:** `400` bytes.\n\n- **Working:** `6599 - 6200 + 1 = 400` bytes (equivalently, next expected byte is `6600`, and `6600 - 6200 = 400`)."
+    },
+    {
+      "id": "quiz-q18",
+      "bank": "quiz",
+      "week": 6,
+      "tag": ["practical"],
+      "meta": ["Quiz Q18 · 1 pt"],
+      "question": "A TCP receiver already has all bytes before 2000. It buffers bytes 2300 through 2499 while 2000 through 2299 are missing. The missing bytes then arrive correctly. What cumulative ACK can it send now (assuming later bytes remain buffered)?",
+      "answer": "**Answer: d.** `2500`.\n\n- **Working:** Once `2000–2299` arrives, the receiver has contiguous bytes up through `2499` (including the buffered `2300–2499`), so the next expected byte is `2500`."
+    },
+    {
+      "id": "quiz-q19",
+      "bank": "quiz",
+      "week": 6,
+      "tag": ["practical", "formula"],
+      "meta": ["Quiz Q19 · 1 pt"],
+      "question": "In the simplified TCP window model (in BYTES), receive window = 9000 bytes, congestion window = 15000 bytes, and 6500 bytes are outstanding. How many ADDITIONAL data bytes may the sender send now?",
+      "answer": "**Answer:** `2500` bytes.\n\n- **Working:** Effective window = `min(rwnd, cwnd) = min(9000, 15000) = 9000` bytes. Remaining sendable = `9000 - 6500 = 2500` bytes."
+    },
+    {
+      "id": "quiz-q20",
+      "bank": "quiz",
+      "week": 3,
+      "tag": ["practical"],
+      "meta": ["Quiz Q20 · 1 pt"],
+      "question": "A student opens a saved course-file link. The browser receives HTTP 200 OK, Content-Type text/html, and a body containing a login form, while the intended file is a PDF. What is the best next step?",
+      "answer": "**Answer: c.** Inspect the final URL and returned page, then check the expected sign-in and file-access steps using the intended account.\n\n- **Why:** `200 OK` with `text/html` means the server returned an HTML login page instead of the PDF because the user is not authenticated/authorized yet."
+    },
+    {
+      "id": "remember-w1-q1",
+      "bank": "remember",
+      "week": 1,
+      "tag": ["theory"],
+      "meta": ["Week 1 Exit Ticket"],
+      "question": "State the four Week 1 exit-ticket checks (AP vs router, local vs remote path, requirement vs assumption, and ping's limit).",
+      "answer": "**Key takeaway:** AP connects Wi-Fi to LAN, router forwards between networks, local printing stays on LAN while Moodle crosses the gateway/ISP, and ping tests only ICMP reachability.\n\n- **Requirement vs Assumption:** Requirement = user need (*students need Moodle in both rooms*); Assumption = unconfirmed planning claim (*one AP covers each room*)."
+    },
+    {
+      "id": "remember-w2-q1",
+      "bank": "remember",
+      "week": 2,
+      "tag": ["theory"],
+      "meta": ["Week 2 Checkpoint"],
+      "question": "What happens if packet length doubles, and what can an encrypted packet capture still reveal?",
+      "answer": "**Key takeaway:** Doubling packet length doubles transmission delay (L/R) while leaving propagation delay (d/s) unchanged; encrypted captures still expose IPs, ports, sizes, and timing.\n\n- **Router rule:** A router strips and replaces only the link frame (`Hl`), keeping IP headers (`Hn`) intact."
+    },
+    {
+      "id": "remember-w3-q1",
+      "bank": "remember",
+      "week": 3,
+      "tag": ["theory"],
+      "meta": ["Week 3 Checkpoint"],
+      "question": "How does an HTTP error differ from a DNS failure, and why do browser DevTools see headers that Wireshark cannot on HTTPS?",
+      "answer": "**Key takeaway:** An HTTP error means DNS and TCP succeeded and the server replied; DevTools run inside the browser after TLS decryption.\n\n- **DNS vs HTTP:** DNS failure = hostname never resolved to an IP; HTTP 404/503 = connection opened and server returned a status."
+    },
+    {
+      "id": "remember-w4-q1",
+      "bank": "remember",
+      "week": 4,
+      "tag": ["theory"],
+      "meta": ["Week 4 Checkpoint"],
+      "question": "Why is an IP address alone insufficient to identify a server process, and does UDP forbid application-level acknowledgements?",
+      "answer": "**Key takeaway:** Multiple processes share one host IP so ports are required; UDP does not forbid app-level ACKs—the application simply has to implement them itself.\n\n- **TCP Framing:** TCP is a byte stream, so apps must add delimiters (like `\\n`) or length prefixes."
+    },
+    {
+      "id": "remember-w5-q1",
+      "bank": "remember",
+      "week": 5,
+      "tag": ["theory"],
+      "meta": ["Week 5 Review"],
+      "question": "Why does a timeout fail to prove DATA loss, and why acknowledge a duplicate without delivering it again?",
+      "answer": "**Key takeaway:** A timeout only proves no matching ACK arrived in time (DATA or ACK could be lost/delayed); repeating the ACK lets the sender advance while preventing duplicate app delivery.\n\n- **Utilisation assumptions:** Ideal `U = T_tx / (T_tx + RTT)` assumes no loss, one packet in flight, and negligible ACK transmission/processing."
+    },
+    {
+      "id": "remember-w6-q1",
+      "bank": "remember",
+      "week": 6,
+      "tag": ["theory"],
+      "meta": ["Week 6 Key Rules"],
+      "question": "Summarize the 4 key TCP rules (SYN/ACK seq space, gap ACKs, window limit, and useful throughput).",
+      "answer": "**Key takeaway:** SYN/FIN use 1 seq # (pure ACK uses 0), cumulative ACKs point to the first missing byte, effective window is min(rwnd, cwnd), and useful throughput counts only hash-verified transfers.\n\n- **Bottleneck:** Ideal transfer time = file bits / slowest link rate (`1 MB = 10^6 bytes`)."
+    },
+    {
+      "id": "remember-w7-q1",
+      "bank": "remember",
+      "week": 7,
+      "tag": ["practical"],
+      "meta": ["Week 7 Midterm Summary"],
+      "question": "What are the four Midterm Review pillars for validating a network design?",
+      "answer": "**Key takeaway:** Define testable user requirements, trace topology/layers, size capacity against the bottleneck, and verify with layer-by-layer diagnostics plus allowed/denied acceptance tests.\n\n- **Never skip:** Record unresolved assumptions and distinguish modeled/sample evidence from live measurements."
+    }
+  ]
+}

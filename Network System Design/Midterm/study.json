@@ -1,0 +1,26 @@
+{
+  "title": "Network System Design (SE026) — Slide & Lab Study Guide (Weeks 1–7)",
+  "blueprint": "**Exam Blueprint (`Lecture 1, Slide 30` & `Quiz`):** Midterm **30%** · **90-minute paper examination** requiring written answers and working · Covers **Lectures 1–7 & Labs 1–6**.",
+  "links": [
+    {
+      "label": "Course Overview",
+      "path": "overview.md"
+    },
+    {
+      "label": "Quiz Guide",
+      "path": "quiz.json"
+    },
+    {
+      "label": "What To Remember",
+      "path": "what-to-remember.json"
+    },
+    {
+      "label": "All Questions",
+      "path": "questions.json"
+    }
+  ],
+  "source": "questions.json",
+  "filter": {
+    "bank": "study"
+  }
+}

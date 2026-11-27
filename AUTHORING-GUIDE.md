@@ -56,10 +56,12 @@ When reading each slide, scan for items a professor can turn into a simple direc
 #### "What is X?" Foundation Card Rule
 - Whenever a slide jumps straight into parts, steps, or comparisons of an acronym or concept without first defining what it is (e.g., ADR, C4, QAS, TLS, DNS, JWT, CORS, Idempotency, DDD, Event Storming, 2PC), add a short plain-English **"What is X?"** foundation card (`data-meta="Concept · Slide N"`) right before the detail card so a beginner never memorizes parts of something they don't understand.
 
-#### Strict Rules for `study.md`
+#### Strict Rules for `study.md` & `questions.json`
 - Organize by `## Section 1 — Week 1: <Title>` … `## Section K — Week K: <Title>`.
+- **Zero missed slide info & full Slide-Sync coverage:** Cover **every** content slide across all weeks—including Review / Midterm Review decks, tables, formulas, diagrams, callouts, and in-class exercises—mapping each card via `slides: [...]` so nothing on any slide is skipped and Slide-Sync Mode has helpful cards on every content slide.
 - **1 focused slide topic = 1 simple quiz-style `<details>` card** with `data-meta="Slide N"`. Never cram 3–4 unrelated slides into one mega-card.
-- Preserve **exact slide wording**, verbatim quotes, tables, formulas, and code snippets. **Never just parrot terse slide bullets:** wherever a slide is vague or brief, add 1–2 concise **concrete examples, crash/attack walkthroughs, or exam tips** (especially useful in Slide-Sync Mode where the student already sees the original slide on the left) without introducing unrelated off-syllabus topics.
+- **Name implicit umbrella groupings:** When a slide lists related items without explicitly stating the overarching category (e.g., listing REST, gRPC, GraphQL, and Webhooks without saying *"these are the 4 API styles"*), state the umbrella category explicitly so the student sees how the items fit together.
+- **Clear, not overly technical explanations:** Preserve **exact slide wording**, verbatim quotes, tables, formulas, and code snippets, and **never just parrot terse slide bullets**: wherever a slide is vague or brief, add 1–2 concise **concrete examples, worked walkthroughs, or exam tips** (especially useful in Slide-Sync Mode). Use important subject-specific technical terms only when needed, and **define their meaning** briefly inline (or in `overview.md`'s vocabulary decoder) so students never study blind.
 - **Zero invented bloat:** NO fake `CRITICAL` / `HIGH` priority badges, NO `Exam Radar` / `Predicted` labels, NO Gap Matrix tables, NO artificial Mock Midterms or Rapid Review Traps sections.
 
 ### 3. `quiz.md` — Quiz Guide (Sorts 3rd)

@@ -54,9 +54,9 @@ Follow this exact structure when converting new lectures, slides, handouts, or q
 - No hardcoded text filters in JS; non-spoken content uses `data-no-audio` or `data-tag`/`data-meta`.
 
 ## 6. State
-- Done: Audiobook Player (full Q + 1 bullet/block, section announce/jump, shuffle, bookmark, MediaSession, review flags), Offline Save toggle + `sw.js` (including PDF.js & `_components/`), inline PDF slide viewer (`#pdfPane`/`#pdfFrame`), **Slide-Sync Mode** (`#syncPane` locked single-page PDF.js + matching Q&A cards + `Hide Q&A` toggle + full-CRUD Note Box & `Copy Notes`), **Master `questions.json` + thin views (`study.json`, `quiz.json`, `what-to-remember.json`) + `_components/*.md`**, `Extra/` folder indexing (`rankGroup()` + ALL-CAPS `humanizeTitle()`), Soft Indigo radar palette, centered `1000px` reading column, Mermaid aspect-ratio readability floor (`.is-wide` + `flowchart TD`), `Software Architecture/Midterm/overview.md`, `AUTHORING-GUIDE.md`, and updated `workspace-summary.md`.
-- Next: Push to GitHub and enable Pages (Settings → Pages → Source: GitHub Actions); test live in Edge/Chrome.
-- Not Explored: Course folders outside `Software Architecture`.
+- Done: Audiobook Player (full Q + 1 bullet/block, section announce/jump, shuffle, bookmark, MediaSession, review flags), Offline Save toggle + `sw.js` (including PDF.js & `_components/`), inline PDF slide viewer (`#pdfPane`/`#pdfFrame`), **Slide-Sync Mode** (`#syncPane` locked single-page PDF.js + matching Q&A cards + `Hide Q&A` toggle + full-CRUD Note Box & `Copy Notes`), **Master `questions.json` + thin views (`study.json`, `quiz.json`, `what-to-remember.json`) + `_components/*.md`**, `Extra/` folder indexing (`rankGroup()` + ALL-CAPS `humanizeTitle()`), Soft Indigo radar palette, centered `1000px` reading column, Mermaid aspect-ratio readability floor (`.is-wide` + `flowchart TD`), `Software Architecture/Midterm/overview.md`, `AUTHORING-GUIDE.md`, and `Network System Design/Midterm/` Option B suite (`overview.md`, `questions.json` covering Lectures 1–7, Labs 1–6 & 20 `Quiz/quiz.md` questions, `study.json`, `quiz.json`, `what-to-remember.json`, 5 `_components/*.md` Mermaid diagrams, `manifest.json`).
+- Next: Push to GitHub to deploy Pages and auto-regenerate `manifest.json`; test `Network System Design` in Study Hub.
+- Not Explored: Course folders outside `Software Architecture` and `Network System Design`.
 
 ## 7. Commands
 - None required (static site). Inline scripts & `sw.js` syntax-checked via `node`.

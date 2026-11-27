@@ -1,6 +1,93 @@
 {
-  "generatedAt": "2026-11-26T17:39:59.151Z",
+  "generatedAt": "2026-11-27T12:09:00.000Z",
   "subjects": [
+    {
+      "name": "Network System Design",
+      "groups": [
+        {
+          "name": "Midterm",
+          "files": [
+            {
+              "title": "Course Overview",
+              "name": "overview.md",
+              "path": "Network System Design/Midterm/overview.md",
+              "type": "md"
+            },
+            {
+              "title": "Study Guide",
+              "name": "study.json",
+              "path": "Network System Design/Midterm/study.json",
+              "type": "json"
+            },
+            {
+              "title": "Quiz Guide",
+              "name": "quiz.json",
+              "path": "Network System Design/Midterm/quiz.json",
+              "type": "json"
+            },
+            {
+              "title": "What To Remember",
+              "name": "what-to-remember.json",
+              "path": "Network System Design/Midterm/what-to-remember.json",
+              "type": "json"
+            },
+            {
+              "title": "All Questions",
+              "name": "questions.json",
+              "path": "Network System Design/Midterm/questions.json",
+              "type": "json"
+            }
+          ]
+        },
+        {
+          "name": "Slides",
+          "files": [
+            {
+              "title": "Week 01 Slides",
+              "name": "Week 01 Slides.pdf",
+              "path": "Network System Design/Slides/Week 01 Slides.pdf",
+              "type": "pdf"
+            },
+            {
+              "title": "Week 02 Slides",
+              "name": "Week 02 Slides.pptx",
+              "path": "Network System Design/Slides/Week 02 Slides.pptx",
+              "type": "pptx"
+            },
+            {
+              "title": "Week 03 Slides",
+              "name": "Week 03 Slides.pptx",
+              "path": "Network System Design/Slides/Week 03 Slides.pptx",
+              "type": "pptx"
+            },
+            {
+              "title": "Week 04 Slides",
+              "name": "Week 04 Slides.pdf",
+              "path": "Network System Design/Slides/Week 04 Slides.pdf",
+              "type": "pdf"
+            },
+            {
+              "title": "Week 05 Slides",
+              "name": "Week 05 Slides.pdf",
+              "path": "Network System Design/Slides/Week 05 Slides.pdf",
+              "type": "pdf"
+            },
+            {
+              "title": "Week 06 Slides",
+              "name": "Week 06 Slides.pdf",
+              "path": "Network System Design/Slides/Week 06 Slides.pdf",
+              "type": "pdf"
+            },
+            {
+              "title": "Week 07 Midterm Review",
+              "name": "Week 07 Midterm Review.pdf",
+              "path": "Network System Design/Slides/Week 07 Midterm Review.pdf",
+              "type": "pdf"
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "Software Architecture",
       "groups": [
@@ -107,6 +194,11 @@
     }
   ],
   "assets": [
+    "Network System Design/Midterm/_components/campus-topology.md",
+    "Network System Design/Midterm/_components/diagnostic-chain.md",
+    "Network System Design/Midterm/_components/encapsulation-forwarding.md",
+    "Network System Design/Midterm/_components/rdt30-ack-loss.md",
+    "Network System Design/Midterm/_components/tcp-handshake-bytes.md",
     "Software Architecture/Midterm/_components/quiz-w2-q12-d1.md",
     "Software Architecture/Midterm/_components/quiz-w7-q11-d1.md",
     "Software Architecture/Midterm/_components/study-w2-q6-d1.md",

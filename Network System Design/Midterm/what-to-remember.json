@@ -1,0 +1,28 @@
+{
+  "title": "Network System Design (SE026) — What to Remember (Weeks 1–7)",
+  "blueprint": "Every week's core ideas, summary takeaways, and checkpoint recall questions across Lectures 1–7.",
+  "links": [
+    {
+      "label": "Course Overview",
+      "path": "overview.md"
+    },
+    {
+      "label": "Study Guide",
+      "path": "study.json"
+    },
+    {
+      "label": "Quiz Guide",
+      "path": "quiz.json"
+    },
+    {
+      "label": "All Questions",
+      "path": "questions.json"
+    }
+  ],
+  "source": "questions.json",
+  "filter": {
+    "bank": "remember"
+  },
+  "showRememberList": true,
+  "showCallouts": true
+}

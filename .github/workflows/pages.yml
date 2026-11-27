@@ -36,7 +36,7 @@ jobs:
           const path = require("path");
 
           const root = process.cwd();
-          const skipDirs = new Set(["node_modules", ".git", ".github"]);
+          const skipDirs = new Set(["node_modules", ".git", ".github", "Quiz", "Quizes", "Practical", "Practicals"]);
 
           function humanizeTitle(filename) {
             const lower = filename.toLowerCase();
@@ -45,7 +45,7 @@ jobs:
             if (lower === "quiz.md" || lower === "quiz.json") return "Quiz Guide";
             if (lower === "what-to-remember.md" || lower === "what-to-remember.json") return "What To Remember";
             if (lower === "questions.json") return "All Questions";
-            const base = filename.replace(/\.(md|pdf|json)$/i, "")
+            const base = filename.replace(/\.(md|pdf|json|pptx)$/i, "")
               .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
               .replace(/[-_]+/g, " ")
               .replace(/\s+/g, " ")
@@ -93,12 +93,12 @@ jobs:
                 } else {
                   walkSubject(full, subjectName, groupMap, assets);
                 }
-              } else if (/\.(md|pdf|json)$/i.test(entry.name)) {
+              } else if (/\.(md|pdf|json|pptx)$/i.test(entry.name)) {
                 const relFromRoot = path.relative(root, full).split(path.sep).join("/");
                 const relFromSubject = path.relative(path.join(root, subjectName), full).split(path.sep);
                 const groupName = relFromSubject.length > 1 ? relFromSubject.slice(0, -1).join(" / ") : "General";
                 if (!groupMap.has(groupName)) groupMap.set(groupName, []);
-                const type = /\.pdf$/i.test(entry.name) ? "pdf" : (/\.json$/i.test(entry.name) ? "json" : "md");
+                const type = /\.pdf$/i.test(entry.name) ? "pdf" : (/\.pptx$/i.test(entry.name) ? "pptx" : (/\.json$/i.test(entry.name) ? "json" : "md"));
                 groupMap.get(groupName).push({
                   title: humanizeTitle(entry.name),
                   name: entry.name,
